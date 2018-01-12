@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="UTF-8">
+    <title>Problem 1</title>
+</head>
+<style>
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: #000;
+        shape-rendering: crispEdges;
+    }
+
+    .line {
+        fill: none;
+        stroke: steelblue;
+        stroke-width: 1.5px;
+    }
+
+    .html, body {
+        width: 100%;
+        height: 100%;
+        margin: 0;
+        font-family: sans-serif;
+        font-size: 12px;
+    }
+
+    .viewport {
+        position: absolute;
+        top: 50px;
+        left: 15px;
+        overflow-y: auto;
+        width: 700px;
+        height: 680px;
+    }
+
+
+</style>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script src="lib/virtualscroller.js"></script>
+<body>
+<div class="viewport">
+    <label>
+        <select id="sortValue" style="position: absolute; top:170px; left:475px">
+            <option values="in_mail">in_mail</option>
+            <option values="out_mail">out_mail</option>
+            <option values="in_people">in_people</option>
+            <option values="out_people">out_people</option>
+        </select>
+    </label>
+    <button id="sortButton" style="position: absolute; top: 168px; left:565px">Sort</button>
+</div>
+<button id="clearButton" style="position: absolute; top:150px; left:1200px">Clear</button>
+<script>
+  d3.csv("/data/C2.1/name_inner_mails_outdegree_weighted.csv", function (error, data) {
+    if (error) throw error;
+    var name_index = [];
+    var name_stack = [];
+    var i;
+    var arrayOutWeighted = [];
+    var arrayInWeighted = [];
+    var arrayOutNoweight = [];
+    var arrayInNoweight = [];
+    var dictHour = {};
+    var item = [];
+    var name_item = [];
+    for (i = 0; i < data.length; i++) {
+      item = [];
+      name_item = [];
+      item['type'] = "out_weighted";
+      item['values'] = data[i]['weight'];
+      item['name'] = data[i]['name'];
+      arrayOutWeighted.push(item);
+    }
+    arrayOutWeighted = arrayOutWeighted.sort(function (a, b) {
+      return b['name'].localeCompare(a['name']);
+    });
+    for (i = 0; i < arrayOutWeighted.length; i++) {
+      item = arrayOutWeighted[i];
+      item['num'] = i;
+      name_item = [];
+      name_index[item['name']] = i;
+      name_item['name'] = item['name'];
+      name_item['num'] = i;
+      name_stack.push(name_item);
+    }
+    d3.csv("/data/C2.1/name_inner_mails_indegree_weighted.csv", function (error2, data2) {
+      if (error2) throw error2;
+      for (i = 0; i < data2.length; i++) {
+        item = [];
+        item['type'] = "in_weighted";
+        item['values'] = data2[i]['weight'];
+        item['name'] = data2[i]['name'];
+        item['num'] = name_index[item['name']];
+        arrayInWeighted.push(item);
+      }
+      d3.csv("/data/C2.1/name_inner_mails_outdegree_noweight.csv", function (error3, data3) {
+        if (error3) throw error3;
+        for (i = 0; i < data3.length; i++) {
+          item = [];
+          item['type'] = "out_noweight";
+          item['values'] = data3[i]['weight'];
+          item['name'] = data3[i]['name'];
+          item['num'] = name_index[item['name']];
+          arrayOutNoweight.push(item);
+        }
+        d3.csv("/data/C2.1/name_inner_mails_indegree_noweight.csv", function (error4, data4) {
+          if (error4) throw error4;
+          for (i = 0; i < data4.length; i++) {
+            item = [];
+            item['type'] = "in_noweight";
+            item['values'] = data4[i]['weight'];
+            item['name'] = data4[i]['name'];
+            item['num'] = name_index[item['name']];
+            arrayInNoweight.push(item);
+          }
+          d3.csv("/data/C2.1/name_sent_hour_count.csv", function (error5, data5) {
+              if (error5) throw error5;
+              var j;
+              var hour = [];
+              var total = 0;
+              for (i = 0; i < data5.length; i++) {
+                hour = [];
+                total = 0;
+                for (j = 1; j < 25; j++)
+                  total += parseInt(data5[i][j.toString()]);
+                for (j = 1; j < 25; j++)
+                  hour.push(parseInt(data5[i][j.toString()]) / total);
+                dictHour[data5[i]['name']] = hour;
+              }
+
+              var mMargin = {top: 0, right: 150, bottom: 30, left: 40},
+                mWidth = 625 - mMargin.left - mMargin.right,
+                mHeight = 2050 - mMargin.top - mMargin.bottom;
+
+              var gMail = d3.select(".viewport").append("svg")
+                .attr("width", mWidth + mMargin.left + mMargin.right)
+                .attr("height", mHeight + mMargin.top + mMargin.bottom)
+                .append("g")
+                .attr("transform", "translate(" + mMargin.left + "," + mMargin.top + ")");
+
+              var x = d3.scale.linear()
+                .range([20, mWidth]);
+
+              var y = d3.scale.linear()
+                .range([mHeight, 0]);
+
+              var r1 = d3.scale.sqrt()
+                .range([1, 15]);
+
+              var r2 = d3.scale.sqrt()
+                .range([1, 13]);
+
+              x.domain([1, 5]).nice();
+              y.domain([0, 81]).nice();
+              r1.domain(d3.extent(arrayOutWeighted.concat(arrayInWeighted), function (d) {
+                return parseInt(d.values);
+              })).nice();
+              r2.domain(d3.extent(arrayOutNoweight.concat(arrayInNoweight), function (d) {
+                return parseInt(d.values);
+              })).nice();
+
+
+              gMail.append("text")
+                .attr({
+                  "x": 170,
+                  "y": 70,
+                  "font-size": "40px"
+                })
+                .text("Email Analysis");
+
+              gMail.selectAll(".dot")
+                .data(arrayOutWeighted.concat(arrayInWeighted).concat(arrayOutNoweight).concat(arrayInNoweight))
+                .enter().append("circle")
+                .attr("class", "dot")
+                .attr("r", function (d) {
+                  switch (d.type) {
+                    case "in_weighted":
+                      return r1(parseInt(d.values));
+                    case "out_weighted":
+                      return r1(parseInt(d.values));
+                    case "in_noweight":
+                      return r2(parseInt(d.values));
+                    case "out_noweight":
+                      return r2(parseInt(d.values));
+                  }
+                })
+                .attr("cx", function (d) {
+                  switch (d.type) {
+                    case "in_weighted" :
+                      return x(1);
+                    case "out_weighted":
+                      return x(2);
+                    case "in_noweight":
+                      return x(3);
+                    case "out_noweight":
+                      return x(4);
+                  }
+                })
+                .attr("cy", function (d) {
+                  return y(d.num);
+                })
+                .attr("fill", "#00C5FF")
+                .on("mouseover", handleMouseOver)
+                .on("mouseout", handleMouseOut);
+
+
+              gMail.selectAll(".nameLabel")
+                .data(name_stack)
+                .enter().append("text")
+                .attr("class", "nameLabel")
+                .text(function (d) {
+                  return d.name;
+                })
+                .attr("x", x(5))
+                .attr("y", function (d) {
+                  return y(d.num) + 2;
+                })
+                .attr("font-size", "16px")
+                .attr("font-family", "sans-serif")
+                .attr("fill", "#000000")
+                .call(show_hour_data, "nameLabel");
+
+
+              var type_stack = ["in_mail", "out_mail", "in_people", "out_people"];
+              var type_label_shift = 20;
+              gMail.selectAll("typeLabel")
+                .data(type_stack)
+                .enter().append("text")
+                .attr("class", "typeLabel")
+                .text(function (d) {
+                  return d;
+                })
+                .attr("x", function (d) {
+                  switch (d) {
+                    case "in_mail":
+                      return x(1) - type_label_shift;
+                    case "out_mail":
+                      return x(2) - type_label_shift;
+                    case "in_people":
+                      return x(3) - type_label_shift;
+                    case "out_people":
+                      return x(4) - type_label_shift;
+                  }
+                })
+                .attr("y", function () {
+                  return y(82)
+                })
+                .attr("font-size", "16px")
+                .attr("font-family", "sans-serif")
+                .attr("fill", "#000000");
+
+              function handleMouseOver(d, i) {
+                d3.select(this).attr({
+                  fill: "#FF7D00",
+                  r: function () {
+                    switch (d.type) {
+                      case "in_weighted":
+                        return r1(parseInt(d.values)) * 2;
+                      case "out_weighted":
+                        return r1(parseInt(d.values)) * 2;
+                      case "in_noweight":
+                        return r2(parseInt(d.values)) * 2;
+                      case "out_noweight":
+                        return r2(parseInt(d.values)) * 2;
+                    }
+                  }
+                });
+                gMail.append("text").attr({
+                  id: "t" + i,
+                  x: function () {
+                    var shift = 20;
+                    switch (d.type) {
+                      case "in_weighted" :
+                        return x(1) + shift;
+                      case "out_weighted":
+                        return x(2) + shift;
+                      case "in_noweight":
+                        return x(3) + shift;
+                      case "out_noweight":
+                        return x(4) + shift;
+                    }
+                  },
+                  y: function () {
+                    var shift = 10;
+                    return y(d.num) - shift;
+                  }
+                })
+                  .text(function () {
+                    return d.values;
+                  });
+              }
+
+              function handleMouseOut(d, i) {
+                d3.select(this).attr({
+                  fill: "#00C5FF",
+                  r: function () {
+                    switch (d.type) {
+                      case "in_weighted":
+                        return r1(parseInt(d.values));
+                      case "out_weighted":
+                        return r1(parseInt(d.values));
+                      case "in_noweight":
+                        return r2(parseInt(d.values));
+                      case "out_noweight":
+                        return r2(parseInt(d.values));
+                    }
+                  }
+                });
+                d3.select("#t" + i).remove();
+              }
+
+              d3.select("#sortButton").on("click", function () {
+                var sortValue = d3.select("#sortValue").property("value");
+
+                function dataSort(sortList) {
+                  sortList = sortList.sort(function (a, b) {
+                    return parseInt(a.values) - parseInt(b.values);
+                  });
+                  for (i = 0; i < sortList.length; i++) {
+                    item = sortList[i];
+                    item['num'] = i;
+                    name_index[item['name']] = i;
+                  }
+                }
+
+                switch (sortValue) {
+                  case "in_mail":
+                    dataSort(arrayInWeighted);
+                    break;
+                  case "out_mail":
+                    dataSort(arrayOutWeighted);
+                    break;
+                  case "in_people":
+                    dataSort(arrayInNoweight);
+                    break;
+                  case "out_people":
+                    dataSort(arrayOutNoweight);
+                    break;
+                }
+
+                for (i = 0; i < arrayInNoweight.length; i++) {
+                  arrayOutWeighted[i]['num'] = name_index[arrayOutWeighted[i]['name']]
+                  arrayInWeighted[i]['num'] = name_index[arrayInWeighted[i]['name']];
+                  arrayOutNoweight[i]['num'] = name_index[arrayOutNoweight[i]['name']];
+                  arrayInNoweight[i]['num'] = name_index[arrayInNoweight[i]['name']];
+                  name_stack[i]['num'] = name_index[name_stack[i]['name']];
+                }
+
+                gMail.selectAll(".dot")
+                  .data(arrayOutWeighted.concat(arrayInWeighted).concat(arrayOutNoweight).concat(arrayInNoweight))
+                  .attr("cy", function (d) {
+                    return y(d.num);
+                  })
+                  .attr("r", function (d) {
+                    switch (d.type) {
+                      case "in_weighted":
+                        return r1(parseInt(d.values));
+                      case "out_weighted":
+                        return r1(parseInt(d.values));
+                      case "in_noweight":
+                        return r2(parseInt(d.values));
+                      case "out_noweight":
+                        return r2(parseInt(d.values));
+                    }
+                  });
+
+                gMail.selectAll(".nameLabel")
+                  .data(name_stack)
+                  .text(function (d) {
+                    return d.name;
+                  })
+                  .attr("y", function (d) {
+                    return y(d.num) + 2;
+                  })
+              });
+
+
+              var hWidth = innerWidth - 10;
+              var hHeight = innerHeight - 100;
+
+
+              var hSvg = d3.select("body").append("svg")
+                .attr("width", hWidth)
+                .attr("height", hHeight);
+              var hData = [];
+              var hyHeight = 500;
+
+
+                function show_hour_data() {
+                  this.on("click", function (d) {
+                    item = [];
+                    item['values'] = [];
+                    var sub_item = [];
+                    for (j = 0; j < 24; j++) {
+                      sub_item = {};
+                      sub_item = {
+                        "time": j,
+                        "frequency": dictHour[d.name][j]
+                      };
+                      item['values'].push(sub_item);
+                    }
+                    item['name'] = d.name;
+
+                    if (d3.select(this).attr("fill") === "#000000") {
+                      d3.select(this).attr("fill", "#FF7D00");
+                      hData.push(item);
+                    }
+                    else if (d3.select(this).attr("fill") === "#FF7D00") {
+                      d3.select(this).attr("fill", "#000000");
+                      hData.splice(hData.indexOf(item), 1);
+                    }
+                    else return;
+
+                    hSvg.select(".hourLine").remove();
+
+                    var hx = d3.scale.linear().range([0, 500]);
+                    var hy = d3.scale.linear().range([hyHeight, 0]);
+
+                    var hxAxis = d3.svg.axis()
+                      .scale(hx)
+                      .orient("bottom");
+                    var hyAxis = d3.svg.axis()
+                      .scale(hy)
+                      .orient("left");
+
+                    var line = d3.svg.line()
+                      .interpolate("basis")
+                      .x(function (d) {
+                        return hx(d.time);
+                      })
+                      .y(function (d) {
+                        return hy(d.frequency);
+                      });
+
+                    hx.domain([0, 24]);
+                    hy.domain([
+                      d3.min(hData, function (c) {
+                        return d3.min(c.values, function (v) {
+                          return v.frequency;
+                        });
+                      }),
+                      d3.max(hData, function (c) {
+                        return d3.max(c.values, function (v) {
+                          return v.frequency;
+                        });
+                      })
+                    ]);
+                    var hColor = d3.scale.category10();
+                    hColor.domain(Object.keys(name_index));
+
+
+                    var gHour = hSvg.append("g")
+                      .attr("class", "hourLine")
+                      .attr("transform", "translate(" + 775 + "," + 150 + ")");
+
+
+                    gHour.append("g")
+                      .attr("class", "x axis")
+                      .attr("transform", "translate(0," + hyHeight + ")")
+                      .call(hxAxis);
+
+                    gHour.append("g")
+                      .attr("class", "y axis")
+                      .call(hyAxis)
+                      .append("text")
+                      .attr("transform", "rotate(-90)")
+                      .attr("y", 6)
+                      .attr("dy", "0.71em")
+                      .style("text-anchor", "end")
+                      .attr("fill", "#000")
+                      .text("Frequency");
+
+                    debugger;
+                    var person = gHour.selectAll(".person")
+                      .data(hData)
+                      .enter().append("g")
+                      .attr("class", "person");
+                    person.append("path")
+                      .attr("class", "line")
+                      .attr("d", function (d) {
+                        return line(d.values);
+                      })
+                      .style("stroke", function (d) {
+                        return hColor(d.name);
+                      });
+                    person.append("text")
+                      .datum(function (d) {
+                        return {name: d.name, value: d.values[d.values.length - 1]}
+                      })
+                      .attr("transform", function (d) {
+                        return "translate(" + hx(d.value.time) + "," + hy(d.value.frequency) + ")";
+                      })
+                      .attr("x", "3")
+                      .attr("dy", ".35em")
+                      .text(function (d) {
+                        return d.name
+                      });
+                  });
+                  d3.select("#clearButton").on("click", function (d) {
+                    hSvg.select(".hourLine").remove();
+                    hData = [];
+                    gMail.selectAll(".nameLabel").remove();
+                    gMail.selectAll(".nameLabel")
+                      .data(name_stack)
+                      .enter().append("text")
+                      .attr("class", "nameLabel")
+                      .text(function (d) {
+                        return d.name;
+                      })
+                      .attr("x", x(5))
+                      .attr("y", function (d) {
+                        return y(d.num) + 2;
+                      })
+                      .attr("font-size", "16px")
+                      .attr("font-family", "sans-serif")
+                      .attr("fill", "#000000")
+                      .call(show_hour_data, "nameLabel");
+                  });
+                }
+            }
+          );
+        });
+      });
+    })
+    ;
+  })
+  ;
+
+</script>
+</body>

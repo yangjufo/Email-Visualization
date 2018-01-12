@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<head>
+    <meta charset="utf-8"/>
+</head>
+<div align='left' id="d3_selectable_force_directed_graph"
+     style="width: 960px; height: 500px; margin-right: 10px; margin-bottom: 12px">
+    <svg style="border:0"></svg>
+</div>
+
+<link rel='stylesheet' href='lib/d3v4-selectable-zoomable-force-directed-graph.css'>
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="lib/d3v4-brush-lite.js"></script>
+<script src="lib/d3v4-selectable-force-directed-graph.js"></script>
+<script src="lib/bullet.js"></script>
+<link rel="stylesheet" href="lib/bullet.css">
+
+<script>
+  var svg = d3.select('#d3_selectable_force_directed_graph');
+
+  d3.csv("/data/C2.1/name_relation_nodes.csv", function (error1, data1) {
+    if (error1) throw error1;
+    d3.csv("/data/C2.1/name_relation_links.csv", function (error2, data2) {
+      if (error2) throw error2;
+      var dict = {};
+      var item = {};
+      var dict_item = [];
+      var i;
+      for (i = 0; i < data1.length; i++) {
+        item = {};
+        item['id'] = data1[i]['id'];
+        item['value'] = parseInt(data1[i]['value']);
+        dict_item.push(item);
+      }
+      dict['nodes'] = dict_item;
+      dict_item = [];
+      for (i = 0; i < data2.length; i++) {
+        item = {};
+        item['source'] = data2[i]['source'];
+        item['target'] = data2[i]['target'];
+        item['value'] = 0.001;
+        dict_item.push(item);
+      }
+      dict['links'] = dict_item;
+      createV4SelectableForceDirectedGraph(svg, dict);
+    });
+  });
+
+</script>
