@@ -1,0 +1,271 @@
+<html>
+<head>
+    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+    <script src="lib/cloud.js"></script>
+    <title>Problem 3</title>
+</head>
+<style>
+    label {
+        font-family: sans-serif;
+        font-size: 50px;
+    }
+
+    select {
+        height: 30px;
+    }
+
+    button {
+        height: 30px;
+    }
+
+    option {
+        font-size: 16px;
+    }
+
+    .bar {
+        fill: #3182bd;
+    }
+
+    .axis text {
+        font: 16px sans-serif;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke:#000;
+        shape-rendering: crispEdges;
+    }
+
+</style>
+<body>
+<div class="menuBar" style="margin-top: 30px">
+    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
+    <a href="p3-1.html" style="margin-left: 100px; font-size: 16px">Previous</a>
+    <a href="p3-3.html" style="margin-left: 15px; font-size: 16px">Next</a>
+</div>
+<div id="setting" style="margin-top:20px">
+    <label style="margin-left: 450px">
+        <select id="timeValue">
+            <option value="201101-201306">2011.01-2013.06</option>
+            <option value="201307-201401">2013.07-2014.01</option>
+            <option value="201402-201405">2014.02-2014.05</option>
+            <option value="201406-201505">2014.06-2015.05</option>
+        </select>
+    </label>
+    <label>
+        <select id="inOutValue">
+            <option value="inner">Inner Mails</option>
+            <option value="outer">Outer Mails</option>
+        </select>
+    </label>
+    <label>
+        <select id="topAddValue">
+            <option value="top">Top Feature</option>
+            <option value="add">New Added Feature</option>
+        </select>
+    </label>
+    <label>
+        <select id="keySubValue">
+            <option value="key">Keywords</option>
+            <option value="sub">Subjects</option>
+        </select>
+    </label>
+    <label>
+        <button id="brushButton">Show</button>
+    </label>
+</div>
+<div id="chart" style="margin: 20px;"></div>
+<script>
+
+  d3.json("/data/C2.3/subject_feature.json", function (errorq, root1) {
+    if (errorq) throw errorq;
+    d3.json("/data/C2.3/subject_top.json", function (error2, root2) {
+      var partition = d3.layout.partition()
+        .value(function (d) {
+          return d.value;
+        });
+
+      var svg_location = "#chart";
+      var width = 1300;
+      var height = 550;
+      var svg = d3.select(svg_location).append("svg")
+        .attr("width", width)
+        .attr("height", height);
+
+      var temp_data = partition.nodes(root1);
+      var feature_data = {};
+      var i;
+      for (i = 0; i < temp_data[0].length; i++)
+        feature_data[temp_data[0][i].name] = temp_data[0][i].values;
+
+      temp_data = partition.nodes(root2);
+      var top_data = {};
+      for (i = 0; i < temp_data[0].length; i++)
+        top_data[temp_data[0][i].name] = temp_data[0][i].values;
+
+      brush_cloud("inner_top_201101-201306");
+
+      d3.select("#brushButton").on("click", brush_word);
+
+      function brush_word() {
+        svg.select(".cloud").remove();
+        svg.selectAll(".gBar").remove();
+        var inOutValue = d3.select("#inOutValue").property("value");
+        var topAddValue = d3.select("#topAddValue").property("value");
+        var timeValue = d3.select("#timeValue").property("value");
+        var keySubValue = d3.select("#keySubValue").property("value");
+
+        if (topAddValue === "add" && timeValue === "201101-201306")
+          return;
+
+        var dataName = inOutValue + "_" + topAddValue + "_" + timeValue;
+
+        if (keySubValue === "key")
+          brush_cloud(dataName);
+        else
+          brush_bar(dataName)
+      }
+
+      function brush_bar(dataName) {
+        var width = 750;
+        var height = 450;
+        var x = d3.scale.linear().range([0, width]);
+        var y = d3.scale.ordinal().rangeRoundBands([0, height], 0.1);
+
+        var xAxis = d3.svg.axis()
+          .scale(x)
+          .orient("bottom");
+        var yAxis = d3.svg.axis()
+          .scale(y)
+          .orient("left")
+          .tickSize(0)
+          .tickPadding(15);
+
+        var data = top_data[dataName];
+
+        x.domain(d3.extent(data, function (d) {
+          return parseInt(d.value);
+        })).nice();
+        y.domain(data.map(function (d) {
+          return d.subject;
+        }));
+
+        var gBar = svg.selectAll(".gBar")
+          .data(data)
+          .enter().append("g")
+          .attr("class", "gBar")
+          .attr("transform", "translate(300,50)");
+
+        gBar.append("rect")
+          .attr("class", "bar")
+          .attr("x", function (d) {
+            return 0
+          })
+          .attr("y", function (d) {
+            return y(d.subject)
+          })
+          .attr("width", function (d) {
+            return Math.abs(x(parseInt(d.value)) - 0);
+          })
+          .attr("height", y.rangeBand())
+          .on("mouseover", handleMouseOver)
+          .on("mouseout", handleMouseOut);
+
+        function handleMouseOver(d, i) {
+          gBar.append("text")
+            .attr("id", "t" + i)
+            .attr("x", function (d) {
+              return x(d.value) + 25
+            })
+            .attr("y", function (d) {
+              return y(d.subject) + 20
+            })
+            .attr("stroke", "#000")
+            .text(function (d) {
+              return d.value
+            })
+        }
+
+        function handleMouseOut(d, i) {
+          gBar.select("#t" + i).remove();
+        }
+
+        gBar.append("g")
+          .attr("class", "x axis")
+          .attr("transform", "translate(0," + height + ")")
+          .call(xAxis);
+
+        gBar.append("g")
+          .attr("class", "y axis")
+          .call(yAxis);
+      }
+
+
+      function brush_cloud(dataName) {
+        var word_count = {};
+        feature_data[dataName].forEach(function (w) {
+          word_count[w.word] = w.value
+        });
+        draw_cloud(word_count)
+      }
+
+      function draw_cloud(word_count) {
+        svg.select(".cloud").remove();
+
+        var fill = d3.scale.category20();
+        var word_entries = d3.entries(word_count);
+        var xScale = d3.scale.linear()
+          .domain([0, d3.max(word_entries, function (d) {
+            return d.value;
+          })
+          ])
+          .range([10, 100]);
+        d3.layout.cloud().size([width, height])
+          .timeInterval(20)
+          .words(word_entries)
+          .fontSize(function (d) {
+            return xScale(+d.value);
+          })
+          .text(function (d) {
+            return d.key;
+          })
+          .rotate(function () {
+            return ~~(Math.random() * 2) * 90;
+          })
+          .font("Impact")
+          .on("end", draw)
+          .start();
+
+        function draw(words) {
+          svg.append("g")
+            .attr("class", "cloud")
+            .attr("transform", "translate(" + [width >> 1, height >> 1] + ")")
+            .selectAll("text")
+            .data(words)
+            .enter().append("text")
+            .style("font-size", function (d) {
+              return xScale(d.value) + "px";
+            })
+            .style("font-family", "Impact")
+            .style("fill", function (d, i) {
+              return fill(i);
+            })
+            .attr("text-anchor", "middle")
+            .attr("transform", function (d) {
+              return "translate(" + [d.x, d.y] + ")rotate(" + d.rotate + ")";
+            })
+            .text(function (d) {
+              return d.key;
+            });
+        }
+
+        d3.layout.cloud().stop();
+      }
+    });
+  })
+  ;
+</script>
+</body>
+</html>

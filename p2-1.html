@@ -1,10 +1,268 @@
 <!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>Problem 2</title>
-</head>
-<body>
+<meta charset="utf-8">
+<style>
 
+    body {
+        font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+        width: 1300px;
+        height: 700px;
+        position: relative;
+    }
+
+    svg {
+        width: 100%;
+        height: 100%;
+    }
+
+    path.slice {
+        stroke-width: 2px;
+    }
+
+    polyline {
+        opacity: .3;
+        stroke: black;
+        stroke-width: 2px;
+        fill: none;
+    }
+
+</style>
+<body>
+<div class="menuBar" style="margin-top: 30px">
+    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify mails</span>
+    <a href="p1-2.html" style="margin-left: 350px; font-size: 16px">Previous</a>
+    <a href="p2-2.html" style="margin-left: 15px; font-size: 16px">Next</a>
+</div>
+<svg width="960" height="500"></svg>
+<script src="//d3js.org/d3.v3.min.js"></script>
+<script>
+  d3.csv("data/C2.2/inner_outer_mail.csv", function (error, data) {
+
+    if (error) throw error;
+
+    var i;
+    var inOutDict = [], outDict = [], inDict = [];
+    for (i = 0; i < data.length; i++) {
+      if (data[i].name === "inner" || data[i].name === "outer")
+        inOutDict.push({"name": data[i].name, "value": parseInt(data[i].value)});
+      else if (data[i].name === "support" || data[i].name === "confluence" || data[i].name === "notice")
+        inDict.push({"name": data[i].name, "value": parseInt((data[i].value))});
+      else if (data[i].name === "inner_other")
+        inDict.push({"name": "other", "value": parseInt(data[i].value)});
+      else if (data[i].name === "outer_other")
+        outDict.push({"name": "other", "value": parseInt(data[i].value)});
+      else
+        outDict.push({"name": data[i].name, "value": data[i].value})
+    }
+
+    var svg = d3.select("svg"),
+      width = +svg.attr("width"),
+      height = +svg.attr("height"),
+      radius = Math.min(width, height) / 2;
+    g = svg.append("g").attr("transform", "translate(" + 650 + "," + 350 + ")");
+
+    var color = d3.scale.category20c();
+    color.domain([data.forEach(function (d) {
+      return d.name;
+    })]);
+
+    var inPie = d3.layout.pie()
+      .sort(null)
+      .value(function (d) {
+        return parseInt(d.value);
+      });
+
+    var inPath = d3.svg.arc()
+      .outerRadius(radius - 120)
+      .innerRadius(0);
+
+    var inLabel = d3.svg.arc()
+      .outerRadius(radius - 200)
+      .innerRadius(radius - 200);
+
+    var inArc = g.selectAll(".arc")
+      .data(inPie(inOutDict))
+      .enter().append("g")
+      .attr("class", "arc");
+
+    inArc.append("path")
+      .attr("d", inPath)
+      .attr("fill", function (d) {
+        return color(d.data.name);
+      })
+      .on("click", handleClick);
+
+    inArc.append("text")
+      .attr("transform", function (d) {
+        return "translate(" + inLabel.centroid(d) + ")";
+      })
+      .attr("dy", "0.35em")
+      .text(function (d) {
+        return d.data.name;
+      });
+
+    function handleClick(d, i) {
+      debugger;
+      if (d.data.name === "inner")
+        showDetail(inDict);
+      else
+        showDetail(outDict);
+    }
+
+    showDetail(outDict);
+
+    function showDetail(data) {
+      svg.select(".detail").remove();
+      var gOut = svg.append("g")
+        .attr("class", "detail")
+        .attr("transform", "translate(" + [650, 350] + ")");
+      gOut.append("g")
+        .attr("class", "slices");
+      gOut.append("g")
+        .attr("class", "labels");
+      gOut.append("g")
+        .attr("class", "lines");
+
+      var outPie = d3.layout.pie()
+        .sort(function (d) {
+          return parseInt(d.value);
+        })
+        .value(function (d) {
+          return parseInt(d.value);
+        });
+
+      var outArc = d3.svg.arc()
+        .outerRadius(radius * 0.8)
+        .innerRadius(radius * 0.6);
+
+      var outerArc = d3.svg.arc()
+        .outerRadius(radius * 0.9)
+        .innerRadius(radius * 0.9);
+
+      var outLabels = color.domain();
+
+      var key = function (d) {
+        return d.data.name;
+      }
+
+      var slice = gOut.select(".slices").selectAll("path.slice")
+        .data(outPie(data), key);
+
+      slice.enter()
+        .insert("path")
+        .style("fill", function (d) {
+          return color(d.data.name);
+        })
+        .attr("class", "slice")
+        .on("mouseover", handleMouseOver)
+        .on("mouseout", handleMouseOut);
+
+      function handleMouseOver(d, i) {
+        var valueText = gOut.append("text")
+          .attr("id", "t" + i)
+          .attr("dy", ".35em")
+          .attr("class", "outLabels")
+          .text(d.value);
+        valueText.transition().duration(1000)
+          .attrTween("transform", function () {
+            this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+            this._current = interpolate(0);
+            return function (t) {
+              var d2 = interpolate(t);
+              var pos = outerArc.centroid(d2);
+              pos[0] = (radius + 160) * (midAngle(d2) < Math.PI ? 1 : -1);
+              return "translate(" + pos + ")";
+            };
+          })
+          .styleTween("text-anchor", function () {
+            this._current = this._current || d;
+            var interpolate = d3.interpolate(this._current, d);
+            this._current = interpolate(0);
+            return function (t) {
+              var d2 = interpolate(t);
+              return midAngle(d2) < Math.PI ? "start" : "end";
+            };
+          });
+      }
+
+      function handleMouseOut(d, i) {
+        gOut.select("#t" + i).remove();
+      }
+
+      slice.transition().duration(1000)
+        .attrTween("d", function (d) {
+          this._current = this._current || d;
+          var interpolate = d3.interpolate(this._current, d);
+          this._current = interpolate(0);
+          return function (t) {
+            return outArc(interpolate(t));
+          };
+        });
+
+      slice.exit().remove();
+
+      var text = gOut.selectAll(".outLabels")
+        .data(outPie(data), key);
+
+      text.enter()
+        .append("text")
+        .attr("dy", ".35em")
+        .attr("class", "outLabels")
+        .text(function (d) {
+          return d.data.name;
+        });
+
+      function midAngle(d) {
+        return d.startAngle + (d.endAngle - d.startAngle) / 2;
+      }
+
+      text.transition().duration(1000)
+        .attrTween("transform", function (d) {
+          this._current = this._current || d;
+          var interpolate = d3.interpolate(this._current, d);
+          this._current = interpolate(0);
+          return function (t) {
+            var d2 = interpolate(t);
+            var pos = outerArc.centroid(d2);
+            pos[0] = radius * (midAngle(d2) < Math.PI ? 1 : -1);
+            return "translate(" + pos + ")";
+          };
+        })
+        .styleTween("text-anchor", function (d) {
+          this._current = this._current || d;
+          var interpolate = d3.interpolate(this._current, d);
+          this._current = interpolate(0);
+          return function (t) {
+            var d2 = interpolate(t);
+            return midAngle(d2) < Math.PI ? "start" : "end";
+          };
+        });
+
+      text.exit().remove();
+
+      var polyline = gOut.select(".lines").selectAll("polyline")
+        .data(outPie(data), key);
+
+      polyline.enter()
+        .append("polyline");
+
+      polyline.transition().duration(1000)
+        .attrTween("points", function (d) {
+          this._current = this._current || d;
+          var interpolate = d3.interpolate(this._current, d);
+          this._current = interpolate(0);
+          return function (t) {
+            var d2 = interpolate(t);
+            var pos = outerArc.centroid(d2);
+            pos[0] = radius * 0.95 * (midAngle(d2) < Math.PI ? 1 : -1);
+            return [outArc.centroid(d2), outerArc.centroid(d2), pos];
+          };
+        });
+
+      polyline.exit().remove();
+    }
+  });
+
+
+</script>
 </body>
-</html>

@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>Problem 2</title>
+    <script src="//d3js.org/d3.v3.min.js"></script>
+    <link rel="stylesheet" type="text/css"
+          href="https://fonts.googleapis.com/css?family=Open+Sans:400,600">
+    <link rel="stylesheet" type="text/css" href="lib/sequences.css"/>
+</head>
+<body>
+<div class="menuBar" style="margin-top: 30px;">
+    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify mails</span>
+    <a href="p1-2.html" style="margin-left: 50px; font-size: 16px">Previous</a>
+    <a href="p3-1.html" style="margin-left: 15px; font-size: 16px">Next</a>
+</div>
+<div id="main">
+    <div id="sequence" style="margin-top: 30px; margin-left: 50px"></div>
+    <div id="chart">
+        <div id="explanation" style="visibility: hidden">
+            <span id="percentage"></span>
+            <br/>
+            <span id="category"></span>
+        </div>
+    </div>
+</div>
+<div id="sidebar">
+    <input type="checkbox" id="togglelegend" style="margin-top: 100px"> Legend<br/>
+    <div id="legend" style="visibility: hidden;"></div>
+</div>
+<script type="text/javascript" src="lib/sequences.js"></script>
+<script type="text/javascript">
+  // Hack to make this example display correctly in an iframe on bl.ocks.org
+  d3.select(self.frameElement).style("height", "700px");
+</script>
+</body>
+</html>

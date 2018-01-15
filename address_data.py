@@ -1,6 +1,15 @@
+# coding=utf-8
 import os
 import csv
+import json
 import pandas as pd
+import nltk
+from nltk.corpus import stopwords
+import math
+from collections import Counter
+from nltk.stem.porter import *
+from sklearn.feature_extraction.text import TfidfVectorizer
+import string
 
 
 def count_mail():
@@ -26,9 +35,9 @@ def count_mail():
         # path = "data/source_data/s.gallucci.csv"
         if os.path.isfile(path):
             data = pd.read_csv(path)
-            for i in range(0, data.shape[0]):
-                if name_index.has_key(data.ix[i, 2]):
-                    name = name_index[data.ix[i, 2]]
+            for j in range(0, data.shape[0]):
+                if name_index.has_key(data.ix[j, 2]):
+                    name = name_index[data.ix[j, 2]]
                     if time_dict.has_key(name):
                         if data.ix[i, 11] in time_dict[name]:
                             continue
@@ -51,7 +60,6 @@ def count_mail():
 
 
 def count_relation():
-    global temp_abbr
     data_dir = "data/source_data"
     data_list = os.listdir(data_dir)
     address_dict = {}
@@ -96,9 +104,9 @@ def count_relation():
             data = pd.read_csv(path)
             if not name_abbr.has_key(temp_id):
                 continue
-            for i in range(0, data.shape[0]):
-                if name_index.has_key(data.ix[i, 2]):
-                    name = name_index[data.ix[i, 2]]
+            for j in range(0, data.shape[0]):
+                if name_index.has_key(data.ix[j, 2]):
+                    name = name_index[data.ix[j, 2]]
                     if nodes.has_key(name):
                         if links.has_key(name):
                             links[name] += 1
@@ -133,5 +141,282 @@ def address_relation():
         csvFile.close()
 
 
+def classify_mails():
+    name_abbr = {}
+    name_data = pd.read_csv("data/Address2Name.csv")
+
+    for i in range(0, name_data.shape[0]):
+        temp_str = str(name_data.ix[i, 0])
+        temp_abbr = temp_str[0:1] + "." + temp_str[temp_str.rindex(" ") + 1:len(temp_str)]
+        name_abbr[temp_abbr] = temp_str
+
+    total = 0
+    final_dict = {}
+    data_dir = "data/C2.2/notice_confluence_support_mails"
+    data_list = os.listdir(data_dir)
+
+    for i in range(0, len(data_list) - 1):
+        path = os.path.join(data_dir, data_list[i])
+        data = pd.read_csv(path)
+        final_dict[str(data_list[i])[0:str(data_list[i]).rindex("_")]] = data.shape[0]
+        total += data.shape[0]
+    final_dict["inner"] = pd.read_csv("data/C2.2/inner_mail_list.csv").shape[0]
+    final_dict["inner_other"] = final_dict["inner"] - total
+
+    temp_dict = {}
+    path = "data/C2.2/out_mail_by_domain/domain_filename_linenum.csv"
+    data = pd.read_csv(path)
+    for i in range(0, data.shape[0]):
+        if temp_dict.has_key(data.ix[i, 0]):
+            temp_dict[data.ix[i, 0]] += 1
+        else:
+            temp_dict[data.ix[i, 0]] = 1
+
+    temp_dict = sorted(temp_dict.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+    total = 0
+    for i in range(0, 15):
+        total += temp_dict[i][1]
+        final_dict[temp_dict[i][0]] = temp_dict[i][1]
+
+    final_dict["outer"] = pd.read_csv("data/C2.2/outer_mail_list.csv").shape[0]
+    final_dict["outer_other"] = final_dict["outer"] - total
+
+    result_file = "data/C2.2/inner_outer_mail.csv"
+    with open(result_file, "wb") as csvFile:
+        csv_writer = csv.writer(csvFile)
+        for k, v in final_dict.iteritems():
+            csv_writer.writerow([k, v])
+
+
+def get_tokens(text1):
+    remove_punctuation_map = dict((str(char), None) for char in string.punctuation)
+    no_punctuation = text1
+    for k, v in remove_punctuation_map.iteritems():
+        table = string.maketrans(k, " ")
+        no_punctuation = no_punctuation.translate(table)
+    tokens = nltk.word_tokenize(no_punctuation)
+    return tokens
+
+
+def stem_tokens(tokens, stemmer):
+    stemmed = []
+    for item in tokens:
+        stemmed.append(stemmer.stem(item))
+    return stemmed
+
+
+def extract_feature():
+    with open("data/C2.3/subject_period_inner_inner_chat/top_subject_period_201402-201405.txt") as file:
+        words_count = {}
+        data = file.readlines()
+        for line in data:
+            words = line.split()
+            time = int(words[-1])
+            text1 = ""
+            for w in words[0: -1]:
+                text1 += w + " "
+            text1 = ""
+            for i in range(0, len(text1)):
+                if ord(text1[i:i + 1]) < 128:
+                    text1 += text1[i:i + 1]
+            text = text1.lower()
+            tokens = get_tokens(text)
+            filtered = [w for w in tokens if w not in stopwords.words('english')]
+            count = Counter(filtered)
+            for k, v in count.iteritems():
+                if words_count.has_key(k):
+                    words_count[k] += v * time
+                else:
+                    words_count[k] = v * time
+        with open("data/C2.3/subject_period_inner_inner_chat/top_subject_feature_period_201402-201405.csv",
+                  "wb") as csvFile:
+            final_dict = sorted(words_count.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+            csv_writer = csv.writer(csvFile)
+            for i in range(0, len(final_dict)):
+                csv_writer.writerow(final_dict[i])
+
+
+def collect_feature():
+    data_dir = ["data/C2.3/subject_period_inner_inner_chat", "data/C2.3/subject_period_inner_outer_chat"]
+    temp_dict = []
+    for i in range(0, len(data_dir)):
+        data_list = os.listdir(data_dir[i])
+        for j in range(0, len(data_list)):
+            if not data_list[j].endswith(".csv"):
+                continue
+            path = os.path.join(data_dir[i], data_list[j])
+            if os.path.isfile(path):
+                item = []
+                data = pd.read_csv(path, header=None)
+                for k in range(0, 100):
+                    item += [{"word": data.ix[k, 0], "value": data.ix[k, 1]}]
+                if "inner_inner" in data_dir[i]:
+                    name = "inner"
+                else:
+                    name = "outer"
+                if "top" in data_list[j]:
+                    name += "_top"
+                else:
+                    name += "_add"
+                name += str(data_list[j])[str(data_list[j]).rindex("_"):str(data_list[j]).rindex(".")]
+                temp_dict += [{"name": name, "values": item}]
+
+    result_file = "data/C2.3/subject_feature.json"
+    with open(result_file, "wb") as jsonFile:
+        jsonFile.write(json.dumps(temp_dict))
+
+
+def collect_top_subject():
+    data_dir = ["data/C2.3/subject_period_inner_inner_chat", "data/C2.3/subject_period_inner_outer_chat"]
+    final_dict = []
+    for i in range(0, len(data_dir)):
+        data_list = os.listdir(data_dir[i])
+        for j in range(0, len(data_list)):
+            if not data_list[j].endswith(".txt"):
+                continue
+            if not (data_list[j].startswith("top") or data_list[j].startswith("new")):
+                continue
+            path = os.path.join(data_dir[i], data_list[j])
+            if os.path.isfile(path):
+                with open(path) as file:
+                    item = []
+                    data = file.readlines()
+                    for line in data[0:15]:
+                        text1 = ""
+                        words = line.split()
+                        time = words[-1]
+                        for w in words[0: -1]:
+                            text1 += w + " "
+                        text = ""
+                        for k in range(0, len(text1)):
+                            if ord(text1[k:k + 1]) < 128:
+                                text += text1[k:k + 1]
+                        item += [{"subject": text, "value": time}]
+                    if "inner_inner" in data_dir[i]:
+                        name = "inner"
+                    else:
+                        name = "outer"
+                    if "top" in data_list[j]:
+                        name += "_top"
+                    else:
+                        name += "_add"
+                    name += str(data_list[j])[str(data_list[j]).rindex("_"):str(data_list[j]).rindex(".")]
+                    final_dict += [{"name": name, "values": item}]
+    result_file = "data/C2.3/subject_top.json"
+    with open(result_file, "wb") as jsonFile:
+        jsonFile.write(json.dumps(final_dict))
+
+
+def classify_by_subject():
+    keywords = ["windows", "linux", "mac", "ios", "windows phone",
+                "symbian", "blackberry", "android", "exploit",
+                "rcs", "botnet", "malware", "0day", "ddos",
+                "biglietti", "itinerary", "aerei",
+                "delta", "pasticcini", "hotel", "anons",
+                "pranzo", "gift", "maglietta", "ticket",
+                "torta", "visa", "mastercard"]
+    path = "data/C2.2/classify_mail_by_subject/subject.csv"
+    data = pd.read_csv(path, header=None)
+    final_dict = {}
+    for i in range(0, len(keywords)):
+        final_dict[keywords[i]] = 0
+    for i in range(0, data.shape[0]):
+        words = data.ix[i, 0].lower().split()
+        for w in words:
+            if w in keywords:
+                final_dict[w] += 1
+        if "windows phone" in data.ix[i, 0]:
+            final_dict["windows phone"] += 1
+            final_dict['windows'] -= 1
+    result_file = "data/C2.2/classify_by_keywords.csv"
+    with open(result_file, "wb") as csvFile:
+        csv_writer = csv.writer(csvFile)
+        for k, v in final_dict.iteritems():
+            csv_writer.writerow([k, v])
+
+
+def format_data():
+    words_list = ["Windows", "Linux", "Mac", "IOS",
+                  "Windows Phone", "Symbian", "Blackberry", "Android",
+                  "Exploit", "RCS", "Botnet", "Malware", "0day", "DDOS"]
+
+    result_file = "data/C2.3/subject_keywords_period_heat.csv"
+    with open(result_file, "wb") as csvFile:
+        csv_writer = csv.writer(csvFile)
+        path = "data/C2.3/keywords_period_heat.csv"
+        data = pd.read_csv(path, header=None)
+        for i in range(0, data.shape[0]):
+            if data.ix[i, 0] in ["Windows", "Linux", "Mac", "IOS",
+                                 "Windows Phone", "Symbian", "Blackberry", "Android"]:
+                csv_writer.writerow(["Work Mails-Operating System-" + data.ix[i, 0], data.ix[i, 1]])
+
+            elif data.ix[i, 0] in ["Exploit", "RCS", "Botnet", "Malware", "0day", "DDOS"]:
+                csv_writer.writerow(["Work Mails-Attack-" + data.ix[i, 0], data.ix[i, 1]])
+            else:
+                csv_writer.writerow(["Life Mail-" + life_dict[data.ix[i, 0]], data.ix[i, 1]])
+
+
+def business_keywords_count():
+    keywords = ["windows", "linux", "mac", "ios", "windows phone",
+                "symbian", "blackberry", "android", "exploit",
+                "rcs", "botnet", "malware", "0day", "ddos"]
+
+    key_dict = {"windows": "Windows", "linux": "Linux", "mac": "Mac",
+                "ios": "IOS", "windows phone": "Windows Phone", "symbian": "Symbian",
+                "blackberry": "Blackberry", "android": "Android", "exploit": "Exploit",
+                "rcs": "RCS", "botnet": "Botnet", "malware": "Malware", "0day": "0day",
+                "ddos": "DDOS"}
+
+    data_dir = ["data/C2.3/subject_period_inner_inner_chat", "data/C2.3/subject_period_inner_outer_chat"]
+    final_dict = {}
+    for i in range(0, len(data_dir)):
+        data_list = os.listdir(data_dir[i])
+        for j in range(0, len(data_list)):
+            if not data_list[j].endswith(".txt"):
+                continue
+            if not (data_list[j].startswith("subject")):
+                continue
+            path = os.path.join(data_dir[i], data_list[j])
+            print path
+            if os.path.isfile(path):
+                with open(path) as file:
+                    data = file.readlines()
+                    old_date = ""
+                    for line in data:
+                        words = line.split()
+                        count = int(words[-1])
+                        date = words[0]
+                        if not old_date == date:
+                            if not old_date == "":
+                                for w in keywords:
+                                    if not final_dict.has_key(old_date + "," + key_dict[w]):
+                                        final_dict[old_date + "," + key_dict[w]] = 0
+                            old_date = date
+
+                        for w in words[1: -1]:
+                            text = re.sub("[[]()?!,.\"\']+", "", w)
+                            if text.lower() in keywords:
+                                if final_dict.has_key(date + "," + key_dict[text.lower()]):
+                                    final_dict[date + "," + key_dict[text.lower()]] += count
+                                else:
+                                    final_dict[date + "," + key_dict[text.lower()]] = count
+                            if "windows phone" in line:
+                                if final_dict.has_key(date + "," + "Windows Phone"):
+                                    final_dict[date + ",Windows Phone"] += count
+                                else:
+                                    final_dict[date + "," + "Windows Phone"] = count
+                                if final_dict.has_key(date + "," + "Windows"):
+                                    final_dict[date + ",Windows"] += count
+                                else:
+                                    final_dict[date + "," + "Windows"] = count
+
+    final_dict = sorted(final_dict.items())
+    result_file = "data/C2.3/keywords_period_heat.csv"
+    with open(result_file, "wb") as csvFile:
+        csv_writer = csv.writer(csvFile)
+        for k in final_dict:
+            csv_writer.writerow([k])
+
+
 if __name__ == "__main__":
-    address_relation()
+    business_keywords_count()

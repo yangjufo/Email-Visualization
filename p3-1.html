@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<title>Problem 3</title>
+<meta charset="utf-8">
+<style>
+    body {
+        font: 12px Arial;
+    }
+
+    .axis path,
+    .axis line {
+        fill: none;
+        stroke: grey;
+        stroke-width: 1;
+        shape-rendering: crispEdges;
+    }
+
+    .label {
+        font-size: 18px;
+        font-family: "sans-serif";
+    }
+
+    .rulerLabel {
+        font-size: 18px;
+        font-family: "sans-serif";
+        color: #EE4400;
+    }
+
+</style>
+<body>
+<div class="menuBar" style="margin-top: 30px">
+    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
+    <a href="p2-2.html" style="margin-left: 100px; font-size: 16px">Previous</a>
+    <a href="p3-2.html" style="margin-left: 15px; font-size: 16px">Next</a>
+</div>
+<div style="margin-top:10px; margin-left:50px">
+    <div style="display: inline">
+        <label class="label">
+            <input type="checkbox" id="innerCheckBox">
+            Inner Mails
+        </label>
+        <label class="label">
+            <input type="checkbox" id="outerCheckBox">
+            Outer Mails
+        </label>
+    </div>
+    <div class="startRange" style="display: inline; margin-left: 100px">
+        <label class="label">Start:</label>
+        <input type="range" id="startYearRuler" min="2010" max="2016" value="2010"><label class="rulerLabel"
+                                                                                          id="startYearLabel">2010</label>
+        <input type="range" id="startMonthRuler" min="1" max="12" value="1"><label class="rulerLabel"
+                                                                                   id="startMonthLabel">1</label>
+    </div>
+    <div class="endRange" style="display: inline; margin-left: 20px">
+        <label class="label">End:</label>
+        <input type="range" id="endYearRuler" min="2010" max="2016" value="2016"><label class="rulerLabel"
+                                                                                        id="endYearLabel">2016</label>
+        <input type="range" id="endMonthRuler" multiple min="1" max="12" value="12"><label class="rulerLabel"
+                                                                                           id="endMonthLabel">12</label>
+    </div>
+</div>
+<!-- load the d3.js library -->
+<script src="//d3js.org/d3.v3.min.js"></script>
+
+<script>
+  // Get the data
+  d3.csv("/data/C2.3/business_develop_trend/all_date_ymd_inner_mail_count.csv", function (error1, data1) {
+    if (error1) throw error1;
+    var parseDate = d3.time.format("%Y/%m").parse;
+    data1.forEach(function (d) {
+      d.date = parseDate(d.date);
+      d.number = +d.number;
+    });
+    d3.csv("/data/C2.3/business_develop_trend/all_date_ymd_outer_mail_count.csv", function (error2, data2) {
+        if (error2) throw error2;
+        data2.forEach(function (d) {
+          d.date = parseDate(d.date);
+          d.number = +d.number;
+        });
+        d3.select("#innerCheckBox").on("change", brush_chart);
+        d3.select("#outerCheckBox").on("change", brush_chart);
+        d3.select("#startYearRuler").on("change", brush_chart);
+        d3.select("#startMonthRuler").on("change", brush_chart);
+        d3.select("#endYearRuler").on("change", brush_chart);
+        d3.select("#endMonthRuler").on("change", brush_chart);
+
+        function brush_chart() {
+          var isInner = d3.select("#innerCheckBox").property("checked");
+          var isOuter = d3.select("#outerCheckBox").property("checked");
+          var startYear = d3.select("#startYearRuler").property("value");
+          var startMonth = d3.select("#startMonthRuler").property("value");
+          d3.select("#endYearRuler").property("min", startYear);
+          var endYear = d3.select("#endYearRuler").property("value");
+          if (startYear === endYear)
+            d3.select("#endMonthRuler").property("min", startMonth);
+          else
+            d3.select("#endMonthRuler").property("min", 1);
+          var endMonth = d3.select("#endMonthRuler").property("value");
+          d3.select("#startYearLabel").text(startYear);
+          d3.select("#startMonthLabel").text(startMonth);
+          d3.select("#endYearLabel").text(endYear);
+          d3.select("#endMonthLabel").text(endMonth);
+
+          var data = [];
+          var item = [];
+          var i;
+          var startDate = parseDate("" + startYear + "/" + startMonth);
+          var endDate = parseDate("" + endYear + "/" + endMonth);
+          if (isInner) {
+            for (i = 0; i < data1.length; i++) {
+              if (data1[i].date >= startDate && data1[i].date <= endDate) {
+                item.push({
+                  "date": data1[i].date,
+                  "number": data1[i].number
+                });
+              }
+            }
+            data.push({
+              "type": "inner",
+              "values": item
+            })
+          }
+          if (isOuter) {
+            item = [];
+            for (i = 0; i < data2.length; i++) {
+              if (data2[i].date >= startDate && data2[i].date <= endDate) {
+                item.push({
+                  "date": data2[i].date,
+                  "number": data2[i].number
+                });
+                debugger;
+              }
+            }
+            debugger;
+            data.push({
+              "type": "outer",
+              "values": item
+            })
+          }
+
+          if (!isInner && !isOuter) {
+            svg.select(".mailLine").remove();
+            return;
+          }
+          show_data(data);
+        }
+
+
+        var margin = {top: 50, right: 40, bottom: 30, left: 100},
+          width = 1250 - margin.left - margin.right,
+          height = 650 - margin.top - margin.bottom;
+
+        var svg = d3.select("body")
+          .append("svg")
+          .attr("width", width + margin.left + margin.right)
+          .attr("height", height + margin.top + margin.bottom)
+          .append("g")
+          .attr("transform",
+            "translate(" + margin.left + "," + margin.top + ")");
+
+        var x = d3.time.scale().range([0, width]);
+        var y = d3.scale.linear().range([height, 0]);
+        var color = d3.scale.category10();
+
+        // Define the axes
+        var xAxis = d3.svg.axis().scale(x)
+          .orient("bottom").ticks(10);
+
+        var yAxis = d3.svg.axis().scale(y)
+          .orient("left").ticks(10);
+
+        color.domain(["inner", "outer"]);
+
+        function show_data(data) {
+
+          svg.select('.mailLine').remove();
+
+          // Define the line
+          var valueline = d3.svg.line()
+            .x(function (d) {
+              return x(d.date);
+            })
+            .y(function (d) {
+              return y(d.number);
+            });
+
+
+          var gMail = svg.append("g")
+            .attr("class", "mailLine");
+
+          // Scale the range of the data
+          x.domain([
+            d3.min(data, function (c) {
+              return d3.min(c.values, function (d) {
+                return d.date;
+              })
+            }),
+            d3.max(data, function (c) {
+              return d3.max(c.values, function (d) {
+                return d.date;
+              })
+            })
+          ]);
+          y.domain([
+            0, d3.max(data, function (c) {
+              return d3.max(c.values, function (d) {
+                return d.number;
+              })
+            })
+          ]);
+
+          var mails = gMail.selectAll(".mails")
+            .data(data)
+            .enter().append("g")
+            .attr("class", "mails");
+
+          // Add the valueline path.
+          mails.append("path")
+            .transition()
+            .duration(500)
+            .attr("class", "line")
+            .attr("d", function (d) {
+              return valueline(d.values);
+            })
+            .style({
+              "stroke": function (d) {
+                return color(d.type);
+              },
+              "stroke-width": 2,
+              "fill": "none"
+            });
+
+          // Add the X Axis
+          gMail.append("g")
+            .attr("class", "x axis")
+            .attr("transform", "translate(0," + height + ")")
+            .call(xAxis);
+
+          // Add the Y Axis
+          gMail.append("g")
+            .attr("class", "y axis")
+            .call(yAxis)
+            .append("text")
+            .attr("transform", "translate(80, 0)")
+            .attr("y", 6)
+            .attr("dy", "0.71em")
+            .style("text-anchor", "end")
+            .style("font-size", "16px")
+            .attr("fill", "#000")
+            .text("Number");
+        }
+      }
+    )
+    ;
+  })
+  ;
+</script>
+</body>

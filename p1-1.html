@@ -27,11 +27,16 @@
 
     .viewport {
         position: absolute;
-        top: 50px;
+        top: 80px;
         left: 15px;
         overflow-y: auto;
         width: 700px;
         height: 680px;
+    }
+
+    .nameLabel, .typeLabel {
+        font-family: sans-serif;
+        font-size: 18px;
     }
 
 
@@ -39,18 +44,23 @@
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script src="lib/virtualscroller.js"></script>
 <body>
+<div class="menuBar" style="margin-top: 30px">
+    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify workers</span>
+    <a href="index.html" style="margin-left: 350px; font-size: 16px">Index</a>
+    <a href="p1-2.html" style="margin-left: 50px; font-size: 16px">Next</a>
+</div>
 <div class="viewport">
     <label>
-        <select id="sortValue" style="position: absolute; top:170px; left:475px">
-            <option values="in_mail">in_mail</option>
-            <option values="out_mail">out_mail</option>
-            <option values="in_people">in_people</option>
-            <option values="out_people">out_people</option>
+        <select id="sortValue" style="position: absolute; top:160px; left:475px; height: 30px;">
+            <option value="in_mail">in_mail</option>
+            <option value="out_mail">out_mail</option>
+            <option value="in_people">in_people</option>
+            <option value="out_people">out_people</option>
         </select>
     </label>
-    <button id="sortButton" style="position: absolute; top: 168px; left:565px">Sort</button>
+    <button id="sortButton" style="position: absolute; top: 160px; left:565px; height:30px">Sort</button>
 </div>
-<button id="clearButton" style="position: absolute; top:150px; left:1200px">Clear</button>
+<button id="clearButton" style="position: absolute; top:150px; left:1200px;height:30px">Clear</button>
 <script>
   d3.csv("/data/C2.1/name_inner_mails_outdegree_weighted.csv", function (error, data) {
     if (error) throw error;
@@ -200,7 +210,7 @@
                 .attr("cy", function (d) {
                   return y(d.num);
                 })
-                .attr("fill", "#00C5FF")
+                .attr("fill", "#3182bd")
                 .on("mouseover", handleMouseOver)
                 .on("mouseout", handleMouseOut);
 
@@ -223,7 +233,7 @@
 
 
               var type_stack = ["in_mail", "out_mail", "in_people", "out_people"];
-              var type_label_shift = 20;
+              var type_label_shift = 30;
               gMail.selectAll("typeLabel")
                 .data(type_stack)
                 .enter().append("text")
@@ -252,7 +262,7 @@
 
               function handleMouseOver(d, i) {
                 d3.select(this).attr({
-                  fill: "#FF7D00",
+                  fill: "#fd8d3c",
                   r: function () {
                     switch (d.type) {
                       case "in_weighted":
@@ -293,7 +303,7 @@
 
               function handleMouseOut(d, i) {
                 d3.select(this).attr({
-                  fill: "#00C5FF",
+                  fill: "#3182bd",
                   r: function () {
                     switch (d.type) {
                       case "in_weighted":
@@ -347,8 +357,8 @@
                   name_stack[i]['num'] = name_index[name_stack[i]['name']];
                 }
 
-                gMail.selectAll(".dot")
-                  .data(arrayOutWeighted.concat(arrayInWeighted).concat(arrayOutNoweight).concat(arrayInNoweight))
+                gMail.selectAll(".dot").transition()
+                  .duration(500)
                   .attr("cy", function (d) {
                     return y(d.num);
                   })
@@ -366,7 +376,8 @@
                   });
 
                 gMail.selectAll(".nameLabel")
-                  .data(name_stack)
+                  .transition()
+                  .duration(500)
                   .text(function (d) {
                     return d.name;
                   })
@@ -387,137 +398,136 @@
               var hyHeight = 500;
 
 
-                function show_hour_data() {
-                  this.on("click", function (d) {
-                    item = [];
-                    item['values'] = [];
-                    var sub_item = [];
-                    for (j = 0; j < 24; j++) {
-                      sub_item = {};
-                      sub_item = {
-                        "time": j,
-                        "frequency": dictHour[d.name][j]
-                      };
-                      item['values'].push(sub_item);
-                    }
-                    item['name'] = d.name;
+              function show_hour_data() {
+                this.on("click", function (d) {
+                  item = [];
+                  item['values'] = [];
+                  var sub_item = [];
+                  for (j = 0; j < 24; j++) {
+                    sub_item = {};
+                    sub_item = {
+                      "time": j,
+                      "frequency": dictHour[d.name][j]
+                    };
+                    item['values'].push(sub_item);
+                  }
+                  item['name'] = d.name;
 
-                    if (d3.select(this).attr("fill") === "#000000") {
-                      d3.select(this).attr("fill", "#FF7D00");
-                      hData.push(item);
-                    }
-                    else if (d3.select(this).attr("fill") === "#FF7D00") {
-                      d3.select(this).attr("fill", "#000000");
-                      hData.splice(hData.indexOf(item), 1);
-                    }
-                    else return;
+                  if (d3.select(this).attr("fill") === "#000000") {
+                    d3.select(this).attr("fill", "#fd8d3c");
+                    hData.push(item);
+                  }
+                  else if (d3.select(this).attr("fill") === "#fd8d3c") {
+                    d3.select(this).attr("fill", "#000000");
+                    hData.splice(hData.indexOf(item), 1);
+                  }
+                  else return;
 
-                    hSvg.select(".hourLine").remove();
+                  hSvg.select(".hourLine").remove();
 
-                    var hx = d3.scale.linear().range([0, 500]);
-                    var hy = d3.scale.linear().range([hyHeight, 0]);
+                  var hx = d3.scale.linear().range([0, 500]);
+                  var hy = d3.scale.linear().range([hyHeight, 0]);
 
-                    var hxAxis = d3.svg.axis()
-                      .scale(hx)
-                      .orient("bottom");
-                    var hyAxis = d3.svg.axis()
-                      .scale(hy)
-                      .orient("left");
+                  var hxAxis = d3.svg.axis()
+                    .scale(hx)
+                    .orient("bottom");
+                  var hyAxis = d3.svg.axis()
+                    .scale(hy)
+                    .orient("left");
 
-                    var line = d3.svg.line()
-                      .interpolate("basis")
-                      .x(function (d) {
-                        return hx(d.time);
-                      })
-                      .y(function (d) {
-                        return hy(d.frequency);
+                  var line = d3.svg.line()
+                    .interpolate("basis")
+                    .x(function (d) {
+                      return hx(d.time);
+                    })
+                    .y(function (d) {
+                      return hy(d.frequency);
+                    });
+
+                  hx.domain([0, 24]);
+                  hy.domain([
+                    d3.min(hData, function (c) {
+                      return d3.min(c.values, function (v) {
+                        return v.frequency;
                       });
-
-                    hx.domain([0, 24]);
-                    hy.domain([
-                      d3.min(hData, function (c) {
-                        return d3.min(c.values, function (v) {
-                          return v.frequency;
-                        });
-                      }),
-                      d3.max(hData, function (c) {
-                        return d3.max(c.values, function (v) {
-                          return v.frequency;
-                        });
-                      })
-                    ]);
-                    var hColor = d3.scale.category10();
-                    hColor.domain(Object.keys(name_index));
-
-
-                    var gHour = hSvg.append("g")
-                      .attr("class", "hourLine")
-                      .attr("transform", "translate(" + 775 + "," + 150 + ")");
-
-
-                    gHour.append("g")
-                      .attr("class", "x axis")
-                      .attr("transform", "translate(0," + hyHeight + ")")
-                      .call(hxAxis);
-
-                    gHour.append("g")
-                      .attr("class", "y axis")
-                      .call(hyAxis)
-                      .append("text")
-                      .attr("transform", "rotate(-90)")
-                      .attr("y", 6)
-                      .attr("dy", "0.71em")
-                      .style("text-anchor", "end")
-                      .attr("fill", "#000")
-                      .text("Frequency");
-
-                    debugger;
-                    var person = gHour.selectAll(".person")
-                      .data(hData)
-                      .enter().append("g")
-                      .attr("class", "person");
-                    person.append("path")
-                      .attr("class", "line")
-                      .attr("d", function (d) {
-                        return line(d.values);
-                      })
-                      .style("stroke", function (d) {
-                        return hColor(d.name);
+                    }),
+                    d3.max(hData, function (c) {
+                      return d3.max(c.values, function (v) {
+                        return v.frequency;
                       });
-                    person.append("text")
-                      .datum(function (d) {
-                        return {name: d.name, value: d.values[d.values.length - 1]}
-                      })
-                      .attr("transform", function (d) {
-                        return "translate(" + hx(d.value.time) + "," + hy(d.value.frequency) + ")";
-                      })
-                      .attr("x", "3")
-                      .attr("dy", ".35em")
-                      .text(function (d) {
-                        return d.name
-                      });
-                  });
-                  d3.select("#clearButton").on("click", function (d) {
-                    hSvg.select(".hourLine").remove();
-                    hData = [];
-                    gMail.selectAll(".nameLabel").remove();
-                    gMail.selectAll(".nameLabel")
-                      .data(name_stack)
-                      .enter().append("text")
-                      .attr("class", "nameLabel")
-                      .text(function (d) {
-                        return d.name;
-                      })
-                      .attr("x", x(5))
-                      .attr("y", function (d) {
-                        return y(d.num) + 2;
-                      })
-                      .attr("font-size", "16px")
-                      .attr("font-family", "sans-serif")
-                      .attr("fill", "#000000")
-                      .call(show_hour_data, "nameLabel");
-                  });
-                }
+                    })
+                  ]);
+                  var hColor = d3.scale.category10();
+                  hColor.domain(Object.keys(name_index));
+
+
+                  var gHour = hSvg.append("g")
+                    .attr("class", "hourLine")
+                    .attr("transform", "translate(" + 775 + "," + 150 + ")");
+
+
+                  gHour.append("g")
+                    .attr("class", "x axis")
+                    .attr("transform", "translate(0," + hyHeight + ")")
+                    .call(hxAxis);
+
+                  gHour.append("g")
+                    .attr("class", "y axis")
+                    .call(hyAxis)
+                    .append("text")
+                    .attr("transform", "rotate(-90)")
+                    .attr("y", 6)
+                    .attr("dy", "0.71em")
+                    .style("text-anchor", "end")
+                    .attr("fill", "#000")
+                    .text("Frequency");
+
+                  var person = gHour.selectAll(".person")
+                    .data(hData)
+                    .enter().append("g")
+                    .attr("class", "person");
+                  person.append("path")
+                    .attr("class", "line")
+                    .attr("d", function (d) {
+                      return line(d.values);
+                    })
+                    .style("stroke", function (d) {
+                      return hColor(d.name);
+                    });
+                  person.append("text")
+                    .datum(function (d) {
+                      return {name: d.name, value: d.values[d.values.length - 1]}
+                    })
+                    .attr("transform", function (d) {
+                      return "translate(" + hx(d.value.time) + "," + hy(d.value.frequency) + ")";
+                    })
+                    .attr("x", "3")
+                    .attr("dy", ".35em")
+                    .text(function (d) {
+                      return d.name
+                    });
+                });
+                d3.select("#clearButton").on("click", function (d) {
+                  hSvg.select(".hourLine").remove();
+                  hData = [];
+                  gMail.selectAll(".nameLabel").remove();
+                  gMail.selectAll(".nameLabel")
+                    .data(name_stack)
+                    .enter().append("text")
+                    .attr("class", "nameLabel")
+                    .text(function (d) {
+                      return d.name;
+                    })
+                    .attr("x", x(5))
+                    .attr("y", function (d) {
+                      return y(d.num) + 2;
+                    })
+                    .attr("font-size", "16px")
+                    .attr("font-family", "sans-serif")
+                    .attr("fill", "#000000")
+                    .call(show_hour_data, "nameLabel");
+                });
+              }
             }
           );
         });
