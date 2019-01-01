@@ -1,8 +1,9 @@
-<html>
+{% load static %}
+<html lang="en">
 <head>
     <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
     <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
-    <script src="lib/cloud.js"></script>
+    <script src="{% static 'lib/cloud.js' %}"></script>
     <title>Problem 3</title>
 </head>
 <style>
@@ -42,8 +43,8 @@
 <body>
 <div class="menuBar" style="margin-top: 30px">
     <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
-    <a href="p3-1.html" style="margin-left: 100px; font-size: 16px">Previous</a>
-    <a href="p3-3.html" style="margin-left: 15px; font-size: 16px">Next</a>
+    <a href="business-analysis.html" style="margin-left: 100px; font-size: 16px">Previous</a>
+    <a href="business-analysis-3.html" style="margin-left: 15px; font-size: 16px">Next</a>
 </div>
 <div id="setting" style="margin-top:20px">
     <label style="margin-left: 450px">
@@ -79,9 +80,9 @@
 <div id="chart" style="margin: 20px;"></div>
 <script>
 
-  d3.json("/data/C2.3/subject_feature.json", function (errorq, root1) {
+  d3.json("data/C2.3/subject_feature.json", function (errorq, root1) {
     if (errorq) throw errorq;
-    d3.json("/data/C2.3/subject_top.json", function (error2, root2) {
+    d3.json("data/C2.3/subject_top.json", function (error2, root2) {
       var partition = d3.layout.partition()
         .value(function (d) {
           return d.value;

@@ -1,7 +1,7 @@
-<!DOCTYPE html>
+{% load static %}
 <head>
     <meta charset="UTF-8">
-    <title>Problem 1</title>
+    <title>Employee Analysis</title>
 </head>
 <style>
     .axis path,
@@ -42,12 +42,12 @@
 
 </style>
 <script src="//d3js.org/d3.v3.min.js"></script>
-<script src="lib/virtualscroller.js"></script>
+<script src="{% static 'lib/virtualscroller.js' %}"></script>
 <body>
 <div class="menuBar" style="margin-top: 30px">
     <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify workers</span>
     <a href="index.html" style="margin-left: 350px; font-size: 16px">Index</a>
-    <a href="p1-2.html" style="margin-left: 50px; font-size: 16px">Next</a>
+    <a href="employee-analysis-2.html" style="margin-left: 50px; font-size: 16px">Next</a>
 </div>
 <div class="viewport">
     <label>
@@ -62,7 +62,7 @@
 </div>
 <button id="clearButton" style="position: absolute; top:150px; left:1200px;height:30px">Clear</button>
 <script>
-  d3.csv("/data/C2.1/name_inner_mails_outdegree_weighted.csv", function (error, data) {
+  d3.csv("data/C2.1/name_inner_mails_outdegree_weighted.csv", function (error, data) {
     if (error) throw error;
     var name_index = [];
     var name_stack = [];
@@ -94,7 +94,7 @@
       name_item['num'] = i;
       name_stack.push(name_item);
     }
-    d3.csv("/data/C2.1/name_inner_mails_indegree_weighted.csv", function (error2, data2) {
+    d3.csv("data/C2.1/name_inner_mails_indegree_weighted.csv", function (error2, data2) {
       if (error2) throw error2;
       for (i = 0; i < data2.length; i++) {
         item = [];
@@ -104,7 +104,7 @@
         item['num'] = name_index[item['name']];
         arrayInWeighted.push(item);
       }
-      d3.csv("/data/C2.1/name_inner_mails_outdegree_noweight.csv", function (error3, data3) {
+      d3.csv("data/C2.1/name_inner_mails_outdegree_noweight.csv", function (error3, data3) {
         if (error3) throw error3;
         for (i = 0; i < data3.length; i++) {
           item = [];
@@ -114,7 +114,7 @@
           item['num'] = name_index[item['name']];
           arrayOutNoweight.push(item);
         }
-        d3.csv("/data/C2.1/name_inner_mails_indegree_noweight.csv", function (error4, data4) {
+        d3.csv("data/C2.1/name_inner_mails_indegree_noweight.csv", function (error4, data4) {
           if (error4) throw error4;
           for (i = 0; i < data4.length; i++) {
             item = [];
@@ -124,7 +124,7 @@
             item['num'] = name_index[item['name']];
             arrayInNoweight.push(item);
           }
-          d3.csv("/data/C2.1/name_sent_hour_count.csv", function (error5, data5) {
+          d3.csv("data/C2.1/name_sent_hour_count.csv", function (error5, data5) {
               if (error5) throw error5;
               var j;
               var hour = [];

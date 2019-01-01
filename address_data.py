@@ -5,10 +5,8 @@ import json
 import pandas as pd
 import nltk
 from nltk.corpus import stopwords
-import math
 from collections import Counter
 from nltk.stem.porter import *
-from sklearn.feature_extraction.text import TfidfVectorizer
 import string
 
 
@@ -24,21 +22,21 @@ def count_mail():
     for i in range(0, name_data.shape[0]):
         for temp_key in str(name_data.ix[i, 1]).split(';'):
             name_index[temp_key] = name_data.ix[i, 0]
-            if address_dict.has_key(temp_key):
+            if temp_key in address_dict:
                 name_index[address_dict[temp_key]] = name_data.ix[i, 0]
 
     result_dict = {}
     time_dict = {}
     for i in range(0, len(data_list)):
         path = os.path.join(data_dir, data_list[i])
-        print path
+        print(path)
         # path = "data/source_data/s.gallucci.csv"
         if os.path.isfile(path):
             data = pd.read_csv(path)
             for j in range(0, data.shape[0]):
-                if name_index.has_key(data.ix[j, 2]):
+                if data.ix[j, 2] in name_index:
                     name = name_index[data.ix[j, 2]]
-                    if time_dict.has_key(name):
+                    if name in time_dict:
                         if data.ix[i, 11] in time_dict[name]:
                             continue
                         else:
@@ -47,14 +45,14 @@ def count_mail():
                         time_dict[name] = [data.ix[i, 11]]
                     # print(data.ix[i, 0], data.ix[i, 11])
                     temp_hour = str(data.ix[i, 11])[str(data.ix[i, 11]).index(" ") + 1: str(data.ix[i, 11]).index(":")]
-                    if not result_dict.has_key(name):
+                    if not name in result_dict:
                         result_dict.setdefault(name, [0] * 24)
                     result_dict[name][int(temp_hour)] += 1
 
     result_file = "data/C2.1/hour_heat.csv"
     with open(result_file, "wb") as csvFile:
         csv_writer = csv.writer(csvFile)
-        for k, v in result_dict.iteritems():
+        for k, v in result_dict.items():
             csv_writer.writerow([k, v])
         csvFile.close()
 
@@ -76,7 +74,7 @@ def count_relation():
         name_abbr[temp_abbr] = temp_str
         for temp_key in str(name_data.ix[i, 1]).split(';'):
             name_index[temp_key] = name_data.ix[i, 0]
-            if address_dict.has_key(temp_key):
+            if temp_key in address_dict:
                 name_index[address_dict[temp_key]] = name_data.ix[i, 0]
 
     nodes = {}
@@ -85,37 +83,37 @@ def count_relation():
         if os.path.isfile(path):
             temp_str = str(data_list[i])
             temp_id = temp_str[0:temp_str.rindex(".")]
-            if name_abbr.has_key(temp_id):
+            if temp_id in name_abbr:
                 nodes[name_abbr[temp_id]] = 1
     result_file = "data/C2.1/name_relation_nodes.csv"
     with open(result_file, "wb") as csvFile:
         csv_writer = csv.writer(csvFile)
-        for k, v in nodes.iteritems():
+        for k, v in nodes.items():
             csv_writer.writerow([k, v])
         csvFile.close()
 
     links = {}
     for i in range(0, len(data_list)):
         path = os.path.join(data_dir, data_list[i])
-        print path
+        print(path)
         if os.path.isfile(path):
             temp_str = str(data_list[i])
             temp_id = temp_str[0:temp_str.rindex(".")]
             data = pd.read_csv(path)
-            if not name_abbr.has_key(temp_id):
+            if not temp_id in name_abbr:
                 continue
             for j in range(0, data.shape[0]):
-                if name_index.has_key(data.ix[j, 2]):
+                if data.ix[j, 2] in name_index:
                     name = name_index[data.ix[j, 2]]
-                    if nodes.has_key(name):
-                        if links.has_key(name):
+                    if name in nodes:
+                        if name in links:
                             links[name] += 1
                         else:
                             links[name] = 1
             result_file = "data/C2.1/name_relation_links.csv"
             with open(result_file, "a+") as csvFile:
                 csv_writer = csv.writer(csvFile)
-                for k, v in links.iteritems():
+                for k, v in links.items():
                     csv_writer.writerow([k, name_abbr[temp_id], v])
                 csvFile.close()
 
@@ -125,18 +123,18 @@ def address_relation():
     data = pd.read_csv(path)
     nodes = {}
     for i in range(0, data.shape[0]):
-        if nodes.has_key(data.ix[i, 0]):
+        if data.ix[i, 0] in nodes:
             nodes[data.ix[i, 0]] += data.ix[i, 2]
         else:
             nodes[data.ix[i, 0]] = data.ix[i, 2]
-        if nodes.has_key(data.ix[i, 1]):
+        if data.ix[i, 1] in nodes:
             nodes[data.ix[i, 1]] += data.ix[i, 2]
         else:
             nodes[data.ix[i, 1]] = data.ix[i, 2]
     result_file = "data/C2.1/name_relation_nodes.csv"
     with open(result_file, "a+") as csvFile:
         csv_writer = csv.writer(csvFile)
-        for k, v in nodes.iteritems():
+        for k, v in nodes.items():
             csv_writer.writerow([k, v])
         csvFile.close()
 
@@ -167,12 +165,12 @@ def classify_mails():
     path = "data/C2.2/out_mail_by_domain/domain_filename_linenum.csv"
     data = pd.read_csv(path)
     for i in range(0, data.shape[0]):
-        if temp_dict.has_key(data.ix[i, 0]):
+        if data.ix[i, 0] in temp_dict:
             temp_dict[data.ix[i, 0]] += 1
         else:
             temp_dict[data.ix[i, 0]] = 1
 
-    temp_dict = sorted(temp_dict.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+    temp_dict = sorted(temp_dict.items(), reverse=True)
     total = 0
     for i in range(0, 15):
         total += temp_dict[i][1]
@@ -184,16 +182,15 @@ def classify_mails():
     result_file = "data/C2.2/inner_outer_mail.csv"
     with open(result_file, "wb") as csvFile:
         csv_writer = csv.writer(csvFile)
-        for k, v in final_dict.iteritems():
+        for k, v in final_dict.items():
             csv_writer.writerow([k, v])
 
 
 def get_tokens(text1):
     remove_punctuation_map = dict((str(char), None) for char in string.punctuation)
     no_punctuation = text1
-    for k, v in remove_punctuation_map.iteritems():
-        table = string.maketrans(k, " ")
-        no_punctuation = no_punctuation.translate(table)
+    for k, v in remove_punctuation_map.items():
+        no_punctuation = no_punctuation.maketrans(k, " ")
     tokens = nltk.word_tokenize(no_punctuation)
     return tokens
 
@@ -223,14 +220,14 @@ def extract_feature():
             tokens = get_tokens(text)
             filtered = [w for w in tokens if w not in stopwords.words('english')]
             count = Counter(filtered)
-            for k, v in count.iteritems():
-                if words_count.has_key(k):
+            for k, v in count.items():
+                if k in words_count:
                     words_count[k] += v * time
                 else:
                     words_count[k] = v * time
         with open("data/C2.3/subject_period_inner_inner_chat/top_subject_feature_period_201402-201405.csv",
                   "wb") as csvFile:
-            final_dict = sorted(words_count.items(), lambda x, y: cmp(x[1], y[1]), reverse=True)
+            final_dict = sorted(words_count.items(), reverse=True)
             csv_writer = csv.writer(csvFile)
             for i in range(0, len(final_dict)):
                 csv_writer.writerow(final_dict[i])
@@ -331,7 +328,7 @@ def classify_by_subject():
     result_file = "data/C2.2/classify_by_keywords.csv"
     with open(result_file, "wb") as csvFile:
         csv_writer = csv.writer(csvFile)
-        for k, v in final_dict.iteritems():
+        for k, v in final_dict.items():
             csv_writer.writerow([k, v])
 
 
@@ -341,6 +338,7 @@ def format_data():
                   "Exploit", "RCS", "Botnet", "Malware", "0day", "DDOS"]
 
     result_file = "data/C2.3/subject_keywords_period_heat.csv"
+    life_dict = {}
     with open(result_file, "wb") as csvFile:
         csv_writer = csv.writer(csvFile)
         path = "data/C2.3/keywords_period_heat.csv"
@@ -377,7 +375,7 @@ def business_keywords_count():
             if not (data_list[j].startswith("subject")):
                 continue
             path = os.path.join(data_dir[i], data_list[j])
-            print path
+            print(path)
             if os.path.isfile(path):
                 with open(path) as file:
                     data = file.readlines()
@@ -389,23 +387,23 @@ def business_keywords_count():
                         if not old_date == date:
                             if not old_date == "":
                                 for w in keywords:
-                                    if not final_dict.has_key(old_date + "," + key_dict[w]):
+                                    if not old_date + "," + key_dict[w] in final_dict:
                                         final_dict[old_date + "," + key_dict[w]] = 0
                             old_date = date
 
                         for w in words[1: -1]:
-                            text = re.sub("[[]()?!,.\"\']+", "", w)
+                            text = re.sub("[[]\(\)?!,.\"\']+", "", w)
                             if text.lower() in keywords:
-                                if final_dict.has_key(date + "," + key_dict[text.lower()]):
+                                if date + "," + key_dict[text.lower()] in final_dict:
                                     final_dict[date + "," + key_dict[text.lower()]] += count
                                 else:
                                     final_dict[date + "," + key_dict[text.lower()]] = count
                             if "windows phone" in line:
-                                if final_dict.has_key(date + "," + "Windows Phone"):
+                                if date + "," + "Windows Phone" in final_dict:
                                     final_dict[date + ",Windows Phone"] += count
                                 else:
                                     final_dict[date + "," + "Windows Phone"] = count
-                                if final_dict.has_key(date + "," + "Windows"):
+                                if date + "," + "Windows" in final_dict:
                                     final_dict[date + ",Windows"] += count
                                 else:
                                     final_dict[date + "," + "Windows"] = count

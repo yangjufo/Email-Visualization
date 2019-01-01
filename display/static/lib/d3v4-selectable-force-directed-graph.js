@@ -77,11 +77,11 @@ function createV4SelectableForceDirectedGraph(svg, graph) {
       })]
   );
 
-  d3.csv("/data/C2.1/name_outer_mails_degree_weighted.csv", function (error1, data1) {
+  d3.csv("data/C2.1/name_outer_mails_degree_weighted.csv", function (error1, data1) {
     if (error1) throw error1;
-    d3.csv("/data/C2.1/name_outer_mails_degree_noweight.csv", function (error2, data2) {
+    d3.csv("data/C2.1/name_outer_mails_degree_noweight.csv", function (error2, data2) {
       if (error2) throw error2;
-      d3.csv("/data/C2.1/name_outer_mails_degree_avgWeight.csv", function (error3, data3) {
+      d3.csv("data/C2.1/name_outer_mails_degree_avgWeight.csv", function (error3, data3) {
 
         var node = gDraw.append("g")
           .attr("class", "node")

@@ -29,8 +29,8 @@
 <body>
 <div class="menuBar" style="margin-top: 30px">
     <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
-    <a href="p2-2.html" style="margin-left: 100px; font-size: 16px">Previous</a>
-    <a href="p3-2.html" style="margin-left: 15px; font-size: 16px">Next</a>
+    <a href="email-analysis-2.html" style="margin-left: 100px; font-size: 16px">Previous</a>
+    <a href="business-analysis-2.html" style="margin-left: 15px; font-size: 16px">Next</a>
 </div>
 <div style="margin-top:10px; margin-left:50px">
     <div style="display: inline">
@@ -63,14 +63,14 @@
 
 <script>
   // Get the data
-  d3.csv("/data/C2.3/business_develop_trend/all_date_ymd_inner_mail_count.csv", function (error1, data1) {
+  d3.csv("data/C2.3/all_date_ymd_inner_mail_count.csv", function (error1, data1) {
     if (error1) throw error1;
     var parseDate = d3.time.format("%Y/%m").parse;
     data1.forEach(function (d) {
       d.date = parseDate(d.date);
       d.number = +d.number;
     });
-    d3.csv("/data/C2.3/business_develop_trend/all_date_ymd_outer_mail_count.csv", function (error2, data2) {
+    d3.csv("data/C2.3/all_date_ymd_outer_mail_count.csv", function (error2, data2) {
         if (error2) throw error2;
         data2.forEach(function (d) {
           d.date = parseDate(d.date);

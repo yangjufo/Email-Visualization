@@ -2,7 +2,16 @@
 data/source_data/
 
 # python enviroment
-venv/
+env/
+
+# python cache
+__pycache__
 
 # intellij
 .idea/
+
+# database
+db.sqlite3
+migrations
+
+
