@@ -1,11 +1,11 @@
+{% extends 'display/base.html' %}
 {% load static %}
-<html lang="en">
-<head>
-    <script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
-    <script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
-    <script src="{% static 'lib/cloud.js' %}"></script>
-    <title>Problem 3</title>
-</head>
+{% block title %} Employee Analysis {% endblock title %}
+
+{% block style %}
+<script src="//ajax.googleapis.com/ajax/libs/jquery/1.11.1/jquery.min.js"></script>
+<script src="//cdnjs.cloudflare.com/ajax/libs/d3/3.4.11/d3.min.js"></script>
+<script src="{% static 'lib/cloud.js' %}"></script>
 <style>
     label {
         font-family: sans-serif;
@@ -35,17 +35,26 @@
     .axis path,
     .axis line {
         fill: none;
-        stroke:#000;
+        stroke: #000;
         shape-rendering: crispEdges;
     }
 
 </style>
-<body>
-<div class="menuBar" style="margin-top: 30px">
-    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
-    <a href="business-analysis.html" style="margin-left: 100px; font-size: 16px">Previous</a>
-    <a href="business-analysis-3.html" style="margin-left: 15px; font-size: 16px">Next</a>
+{% endblock style %}
+
+{% block pageButton %}
+<div class="change-btn" style="float:right; margin-right: 2%">
+    <button onclick="location.href='business-analysis.html'" class="btn" type="button" title="Business Analysis">
+        Previous
+    </button>
+
+    <button onclick="location.href='business-analysis-3.html'" class="btn" type="button" title="Business Analysis">
+        Next
+    </button>
 </div>
+{% endblock pageButton %}
+
+{% block main %}
 <div id="setting" style="margin-top:20px">
     <label style="margin-left: 450px">
         <select id="timeValue">
@@ -268,5 +277,4 @@
   })
   ;
 </script>
-</body>
-</html>
+{% endblock main %}

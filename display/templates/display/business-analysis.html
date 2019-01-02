@@ -1,6 +1,8 @@
-<!DOCTYPE html>
-<title>Problem 3</title>
-<meta charset="utf-8">
+{% extends 'display/base.html' %}
+{% load static %}
+{% block title %} Employee Analysis {% endblock title %}
+
+{% block style %}
 <style>
     body {
         font: 12px Arial;
@@ -26,12 +28,21 @@
     }
 
 </style>
-<body>
-<div class="menuBar" style="margin-top: 30px">
-    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
-    <a href="email-analysis-2.html" style="margin-left: 100px; font-size: 16px">Previous</a>
-    <a href="business-analysis-2.html" style="margin-left: 15px; font-size: 16px">Next</a>
+{% endblock style %}
+
+{% block pageButton %}
+<div class="change-btn" style="float:right; margin-right: 2%">
+    <button onclick="location.href='email-analysis-2.html'" class="btn" type="button" title="Email Analysis">
+        Previous
+    </button>
+
+    <button onclick="location.href='business-analysis-2.html'" class="btn" type="button" title="Business Analysis">
+        Next
+    </button>
 </div>
+{% endblock pageButton %}
+
+{% block main %}
 <div style="margin-top:10px; margin-left:50px">
     <div style="display: inline">
         <label class="label">
@@ -147,7 +158,7 @@
 
         var margin = {top: 50, right: 40, bottom: 30, left: 100},
           width = 1250 - margin.left - margin.right,
-          height = 650 - margin.top - margin.bottom;
+          height = 550 - margin.top - margin.bottom;
 
         var svg = d3.select("body")
           .append("svg")
@@ -254,4 +265,4 @@
   })
   ;
 </script>
-</body>
+{% endblock main %}

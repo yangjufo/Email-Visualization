@@ -179,9 +179,12 @@ function createV4SelectableForceDirectedGraph(svg, graph) {
           item['markers'] = [avgWeight_dict[d.id]];
           data.push(item);
 
+          var distance = 550;
+          var nameTop = 100;
+
           svg.append("g")
             .style("text-anchor", "end")
-            .attr("transform", "translate(" + 1100 + "," + 200 + ")")
+            .attr("transform", "translate(" + 1000 + "," + nameTop + ")")
             .append("text")
             .attr("class", "show_name")
             .attr("font-size", "40px")
@@ -192,7 +195,7 @@ function createV4SelectableForceDirectedGraph(svg, graph) {
             .attr("class", "bullet")
             .attr("width", width + margin.left + margin.right)
             .attr("height", height + margin.top + margin.bottom)
-            .attr("transform", "translate(" + 600 + "," + -250 + ")")
+            .attr("transform", "translate(" + 600 + "," + (nameTop-distance) + ")")
             .append("g")
             .attr("transform", "translate(" + margin.left + "," + margin.top + ")")
             .call(chart);

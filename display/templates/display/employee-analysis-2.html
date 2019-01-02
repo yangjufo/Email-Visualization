@@ -1,24 +1,33 @@
+{% extends 'display/base.html' %}
 {% load static %}
-<head>
-    <meta charset="utf-8"/>
-    <title>Problem 1</title>
-</head>
-<div class="menuBar" style="margin-top: 30px">
-    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify workers</span>
-    <a href="employee-analysis.html" style="margin-left: 350px; font-size: 16px">Previous</a>
-    <a href="email-analysis.html" style="margin-left: 15px; font-size: 16px">Next</a>
+{% block title %} Employee Analysis {% endblock title %}
+
+{% block style %}
+<link rel='stylesheet' href="{% static 'lib/d3v4-selectable-zoomable-force-directed-graph.css' %}">
+<script src="https://d3js.org/d3.v4.js"></script>
+<script src="{% static 'lib/d3v4-brush-lite.js' %}"></script>
+<script src="{% static 'lib/d3v4-selectable-force-directed-graph.js' %}"></script>
+<script src="{% static 'lib/bullet.js' %}"></script>
+<link rel="stylesheet" href="{% static 'lib/bullet.css' %}">
+{% endblock style %}
+
+{% block pageButton %}
+<div class="change-btn" style="float:right; margin-right: 2%">
+    <button onclick="location.href='employee-analysis.html'" class="btn" type="button" title="Employee Analysis">
+        Previous
+    </button>
+
+    <button onclick="location.href='email-analysis.html'" class="btn" type="button" title="Email Analysis">
+        Next
+    </button>
 </div>
+{% endblock pageButton %}
+
+{% block main %}
 <div align='left' id="d3_selectable_force_directed_graph"
-     style="width: 960px; height: 500px; margin-right: 10px; margin-bottom: 12px">
+     style="width: 100%; height: 100%;">
     <svg style="border:0"></svg>
 </div>
-
-<link rel='stylesheet' href='../../static/lib/d3v4-selectable-zoomable-force-directed-graph.css'>
-<script src="https://d3js.org/d3.v4.js"></script>
-<script src="../../static/lib/d3v4-brush-lite.js"></script>
-<script src="../../static/lib/d3v4-selectable-force-directed-graph.js"></script>
-<script src="../../static/lib/bullet.js"></script>
-<link rel="stylesheet" href="../../static/lib/bullet.css">
 
 <script>
   var svg = d3.select('#d3_selectable_force_directed_graph');
@@ -52,3 +61,4 @@
   });
 
 </script>
+{% endblock main %}

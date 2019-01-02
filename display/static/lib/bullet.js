@@ -15,7 +15,6 @@
 
     // For each small multiple…
     function bullet(g) {
-      debugger;
       g.each(function (d, i) {
         var markerz = markers.call(this, d, i).slice().sort(d3.descending),
           measurez = measures.call(this, d, i).slice().sort(d3.descending),
@@ -143,7 +142,7 @@
     bullet.orient = function (x) {
       if (!arguments.length) return orient;
       orient = x;
-      reverse = orient == "right" || orient == "bottom";
+      reverse = orient === "right" || orient == "bottom";
       return bullet;
     };
 
@@ -195,7 +194,7 @@
   function bulletMeasures(d) {
     return d.measures;
   }
-
+zz
   function bulletTranslate(x) {
     return function (d) {
       return "translate(" + x(d) + ",0)";

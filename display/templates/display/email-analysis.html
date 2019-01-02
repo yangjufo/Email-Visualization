@@ -1,5 +1,8 @@
+{% extends 'display/base.html' %}
 {% load static %}
-<meta charset="utf-8">
+{% block title %} Email Analysis {% endblock title %}
+
+{% block style %}
 <style>
 
     body {
@@ -26,14 +29,23 @@
     }
 
 </style>
-<body>
-<div class="menuBar" style="margin-top: 30px">
-    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify mails</span>
-    <a href="employee-analysis-2.html" style="margin-left: 350px; font-size: 16px">Previous</a>
-    <a href="email-analysis-2.html" style="margin-left: 15px; font-size: 16px">Next</a>
-</div>
-<svg width="960" height="500"></svg>
 <script src="//d3js.org/d3.v3.min.js"></script>
+{% endblock style %}
+
+{% block pageButton %}
+<div class="change-btn" style="float:right; margin-right: 2%">
+    <button onclick="location.href='employee-analysis-2.html'" class="btn" type="button" title="Employee Analysis">
+        Previous
+    </button>
+
+    <button onclick="location.href='email-analysis-2.html'" class="btn" type="button" title="Email Analysis">
+        Next
+    </button>
+</div>
+{% endblock pageButton %}
+
+{% block main %}
+<svg width="960" height="600"></svg>
 <script>
   d3.csv("data/C2.2/inner_outer_mail.csv", function (error, data) {
 
@@ -142,7 +154,7 @@
 
       var key = function (d) {
         return d.data.name;
-      }
+      };
 
       var slice = gOut.select(".slices").selectAll("path.slice")
         .data(outPie(data), key);
@@ -265,4 +277,4 @@
 
 
 </script>
-</body>
+{% endblock main %}

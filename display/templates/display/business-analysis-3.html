@@ -1,41 +1,50 @@
+{% extends 'display/base.html' %}
 {% load static %}
-<meta charset="utf-8">
-<html lang="en">
-<head>
-    <style>
-        rect.bordered {
-            stroke: #E6E6E6;
-            stroke-width: 2px;
-        }
+{% block title %} Employee Analysis {% endblock title %}
 
-        text.mono {
-            font-size: 12pt;
-            font-family: sans-serif;
-            fill: #000;
-        }
+{% block style %}
+<style>
+    rect.bordered {
+        stroke: #E6E6E6;
+        stroke-width: 2px;
+    }
 
-        text.axis-workweek {
-            fill: #000;
-        }
+    text.mono {
+        font-size: 12pt;
+        font-family: sans-serif;
+        fill: #000;
+    }
 
-        text.axis-worktime {
-            fill: #000;
-        }
-    </style>
-    <script src="//d3js.org/d3.v3.js"></script>
-</head>
-<body>
-<div class="menuBar" style="margin-top: 30px">
-    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify business</span>
-    <a href="business-analysis-3.html" style="margin-left: 100px; font-size: 16px">Previous</a>
-    <a href="index.html" style="margin-left: 15px; font-size: 16px">Index</a>
+    text.axis-workweek {
+        fill: #000;
+    }
+
+    text.axis-worktime {
+        fill: #000;
+    }
+</style>
+<script src="//d3js.org/d3.v3.js"></script>
+{% endblock style %}
+
+{% block pageButton %}
+<div class="change-btn" style="float:right; margin-right: 2%">
+    <button onclick="location.href='business-analysis-2.html'" class="btn" type="button" title="Business Analysis">
+        Previous
+    </button>
+
+    <button onclick="location.href='index.html'" class="btn" type="button" title="Home">
+        Next
+    </button>
 </div>
+{% endblock pageButton %}
+
+{% block main %}
 <div id="chart"></div>
 <script type="text/javascript">
   d3.csv("data/C2.3/keywords_period_heat.csv", function (error, data) {
     if (error) throw error;
     var margin = {top: 150, right: 0, bottom: 100, left: 125},
-      width = 1300 - margin.left - margin.right,
+      width = 1200 - margin.left - margin.right,
       height = 630 - margin.top - margin.bottom,
       gridSize = Math.floor(width / 53),
       legendElementWidth = gridSize * 3,
@@ -183,5 +192,4 @@
   });
 
 </script>
-</body>
-</html>
+{% endblock main %}

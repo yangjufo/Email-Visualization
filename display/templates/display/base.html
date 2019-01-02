@@ -1,0 +1,135 @@
+{% load static %}
+<html lang="en">
+<head>
+    <title>{% block title %}{% endblock title %}</title>
+    {% block style %}{% endblock style%}
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- favicon -->
+    <link rel="shortcut icon" type="image/png" href="{% static 'favicon/favicon.ico' %}"/>
+
+    <style>
+        .sidenav {
+            height: 100%;
+            width: 0;
+            position: fixed;
+            z-index: 1;
+            top: 0;
+            left: 0;
+            background-color: #111;
+            overflow-x: hidden;
+            transition: 0.5s;
+            padding-top: 60px;
+            font-family: "Lato", sans-serif;
+        }
+
+        .sidenav a {
+            padding: 4px 4px 4px 16px;
+            text-decoration: none;
+            font-size: 16px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidenav p {
+            padding: 4px 4px 4px 8px;
+            font-size: 14px;
+            color: #818181;
+            display: block;
+            transition: 0.3s;
+        }
+
+        .sidenav h1 {
+            padding-left: 8px;
+            margin-bottom: 8px;
+            font-size: 20px;
+            color: #818181;
+            transition: 0.3s;
+        }
+
+        .sidenav a:hover {
+            color: #f1f1f1;
+        }
+
+        .sidenav .closebtn {
+            position: absolute;
+            top: 0;
+            right: 25px;
+            font-size: 36px;
+            margin-left: 50px;
+        }
+
+        @media screen and (max-height: 450px) {
+            .sidenav {
+                padding-top: 15px;
+            }
+
+            .sidenav a {
+                font-size: 18px;
+            }
+        }
+
+        .btn {
+            background-color: #3875d7;
+            border: none;
+            color: white;
+            padding: 8px 16px;
+            text-align: center;
+            font-size: 16px;
+            margin: 4px 2px;
+            opacity: 0.6;
+            transition: 0.3s;
+        }
+
+        .btn:hover {
+            opacity: 1
+        }
+
+    </style>
+</head>
+<body>
+
+<div id="mySidenav" class="sidenav">
+    <a href="javascript:void(0)" class="closebtn" onclick="closeNav()">&times;</a>
+    <div class="myCatalog">
+        <h1>Catalog</h1>
+        <a href="index.html">Home</a>
+        <a href="employee-analysis.html" title="email count and time frequency">Employee Analysis I</a>
+        <a href="employee-analysis-2.html" title="relations and comparasion">Employee Analysis II</a>
+        <a href="email-analysis.html" title="domain count">Email Analysis I</a>
+        <a href="email-analysis-2.html" title="category classification">Email Analysis II</a>
+        <a href="business-analysis.html" title="number against time">Business Analysis I</a>
+        <a href="business-analysis-2.html" title="hot and new keywords cloud">Business Analysis II</a>
+        <a href="business-analysis-3.html" title="keywords heat map over time ">Business Analysis III</a>
+    </div>
+    <div class="myPage">
+        <h1>More</h1>
+        <a href="https://www.jianyang995.com/projects/project/P4">Idea Explaination</a>
+        <a href="http://chinavis.org/2016/challenge.html">Challenge Homepage</a>
+        <a href="https://github.com/yangjufo/Email-Visualization">Source Code</a>
+        <a href="https://www.jianyang995.com/about/">About me</a>
+    </div>
+    <div class="myCopyright" style="float: bottom">
+        <p class="copyright">&copy; 2019 Jian Yang All rights reserved </p>
+    </div>
+</div>
+
+<div class="sidenav-div" style="margin: 1%; width: 100%">
+    <span style="font-size:25px;cursor:pointer;" onclick="openNav()">&#9776;</span>
+    {% block pageButton %}{% endblock pageButton %}
+</div>
+
+
+{% block main %}{% endblock main %}
+
+<script>
+  function openNav() {
+    document.getElementById("mySidenav").style.width = "250px";
+  }
+
+  function closeNav() {
+    document.getElementById("mySidenav").style.width = "0";
+  }
+</script>
+</body>
+</html>

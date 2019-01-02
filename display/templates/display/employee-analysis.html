@@ -1,8 +1,8 @@
+{% extends 'display/base.html' %}
 {% load static %}
-<head>
-    <meta charset="UTF-8">
-    <title>Employee Analysis</title>
-</head>
+{% block title %} Employee Analysis {% endblock title %}
+
+{% block style %}
 <style>
     .axis path,
     .axis line {
@@ -17,7 +17,7 @@
         stroke-width: 1.5px;
     }
 
-    .html, body {
+    body {
         width: 100%;
         height: 100%;
         margin: 0;
@@ -27,40 +27,59 @@
 
     .viewport {
         position: absolute;
-        top: 80px;
-        left: 15px;
+        top: 10%;
+        left: 1%;
         overflow-y: auto;
-        width: 700px;
-        height: 680px;
+        width: 50%;
+        height: 80%;
     }
 
-    .nameLabel, .typeLabel {
-        font-family: sans-serif;
-        font-size: 18px;
+    .typeLabel {
+        height: 2%;
+        font-size: 16px;
+        float: right;
+        margin-right: 50px;
+        margin-top: 3%;
     }
-
 
 </style>
+
 <script src="//d3js.org/d3.v3.min.js"></script>
 <script src="{% static 'lib/virtualscroller.js' %}"></script>
-<body>
-<div class="menuBar" style="margin-top: 30px">
-    <span style="font-size: 30px; font-family: sans-serif; margin-left: 600px">Classify workers</span>
-    <a href="index.html" style="margin-left: 350px; font-size: 16px">Index</a>
-    <a href="employee-analysis-2.html" style="margin-left: 50px; font-size: 16px">Next</a>
+{% endblock style %}
+
+{% block pageButton %}
+<div class="change-btn" style="float:right; margin-right: 2%">
+    <button onclick="location.href='index.html'" class="btn" type="button" title="Home">
+        Previous
+    </button>
+
+    <button onclick="location.href='employee-analysis-2.html'" class="btn" type="button" title="Employee Analysis">
+        Next
+    </button>
 </div>
-<div class="viewport">
+{% endblock pageButton %}
+
+{% block main %}
+<div class="viewtitle" style="height: 2%;">
+    <button id="clearButton" style="margin-top:2%; float:right; margin-right:2%; height:30px">Clear</button>
+    <button id="sortButton" style="float:right; margin-top: 3%; margin-right: 48%; height:30px">Sort</button>
     <label>
-        <select id="sortValue" style="position: absolute; top:160px; left:475px; height: 30px;">
+        <select id="sortValue" style="float:right; margin-top:3%; margin-right: 2%; height: 30px;">
             <option value="in_mail">in_mail</option>
             <option value="out_mail">out_mail</option>
             <option value="in_people">in_people</option>
             <option value="out_people">out_people</option>
         </select>
     </label>
-    <button id="sortButton" style="position: absolute; top: 160px; left:565px; height:30px">Sort</button>
+    <label class="typeLabel">out people</label>
+    <label class="typeLabel">in people</label>
+    <label class="typeLabel">out mail</label>
+    <label class="typeLabel">in mail</label>
 </div>
-<button id="clearButton" style="position: absolute; top:150px; left:1200px;height:30px">Clear</button>
+<div class="hourview" style="float:right; width:48%; height: 70%"></div>
+<div class="viewport" style="margin-top:5%; margin-right:1%; float:right">
+</div>
 <script>
   d3.csv("data/C2.1/name_inner_mails_outdegree_weighted.csv", function (error, data) {
     if (error) throw error;
@@ -139,15 +158,15 @@
                 dictHour[data5[i]['name']] = hour;
               }
 
-              var mMargin = {top: 0, right: 150, bottom: 30, left: 40},
-                mWidth = 625 - mMargin.left - mMargin.right,
+              var mMargin = {top: 0, right: 150, bottom: 0, left: 40},
+                mWidth = 600 - mMargin.left - mMargin.right,
                 mHeight = 2050 - mMargin.top - mMargin.bottom;
 
               var gMail = d3.select(".viewport").append("svg")
                 .attr("width", mWidth + mMargin.left + mMargin.right)
                 .attr("height", mHeight + mMargin.top + mMargin.bottom)
                 .append("g")
-                .attr("transform", "translate(" + mMargin.left + "," + mMargin.top + ")");
+                .attr("transform", "translate(" + mMargin.left + "," + (mMargin.top - 200) + ")");
 
               var x = d3.scale.linear()
                 .range([20, mWidth]);
@@ -169,15 +188,6 @@
               r2.domain(d3.extent(arrayOutNoweight.concat(arrayInNoweight), function (d) {
                 return parseInt(d.values);
               })).nice();
-
-
-              gMail.append("text")
-                .attr({
-                  "x": 170,
-                  "y": 70,
-                  "font-size": "40px"
-                })
-                .text("Email Analysis");
 
               gMail.selectAll(".dot")
                 .data(arrayOutWeighted.concat(arrayInWeighted).concat(arrayOutNoweight).concat(arrayInNoweight))
@@ -230,35 +240,6 @@
                 .attr("font-family", "sans-serif")
                 .attr("fill", "#000000")
                 .call(show_hour_data, "nameLabel");
-
-
-              var type_stack = ["in_mail", "out_mail", "in_people", "out_people"];
-              var type_label_shift = 30;
-              gMail.selectAll("typeLabel")
-                .data(type_stack)
-                .enter().append("text")
-                .attr("class", "typeLabel")
-                .text(function (d) {
-                  return d;
-                })
-                .attr("x", function (d) {
-                  switch (d) {
-                    case "in_mail":
-                      return x(1) - type_label_shift;
-                    case "out_mail":
-                      return x(2) - type_label_shift;
-                    case "in_people":
-                      return x(3) - type_label_shift;
-                    case "out_people":
-                      return x(4) - type_label_shift;
-                  }
-                })
-                .attr("y", function () {
-                  return y(82)
-                })
-                .attr("font-size", "16px")
-                .attr("font-family", "sans-serif")
-                .attr("fill", "#000000");
 
               function handleMouseOver(d, i) {
                 d3.select(this).attr({
@@ -387,15 +368,15 @@
               });
 
 
-              var hWidth = innerWidth - 10;
-              var hHeight = innerHeight - 100;
+              var hWidth = innerWidth / 2 - 100;
+              var hHeight = innerHeight - 200;
 
 
-              var hSvg = d3.select("body").append("svg")
+              var hSvg = d3.select(".hourview").append("svg")
                 .attr("width", hWidth)
                 .attr("height", hHeight);
               var hData = [];
-              var hyHeight = 500;
+              var hyHeight = 400;
 
 
               function show_hour_data() {
@@ -416,16 +397,14 @@
                   if (d3.select(this).attr("fill") === "#000000") {
                     d3.select(this).attr("fill", "#fd8d3c");
                     hData.push(item);
-                  }
-                  else if (d3.select(this).attr("fill") === "#fd8d3c") {
+                  } else if (d3.select(this).attr("fill") === "#fd8d3c") {
                     d3.select(this).attr("fill", "#000000");
                     hData.splice(hData.indexOf(item), 1);
-                  }
-                  else return;
+                  } else return;
 
                   hSvg.select(".hourLine").remove();
 
-                  var hx = d3.scale.linear().range([0, 500]);
+                  var hx = d3.scale.linear().range([0, 440]);
                   var hy = d3.scale.linear().range([hyHeight, 0]);
 
                   var hxAxis = d3.svg.axis()
@@ -463,7 +442,7 @@
 
                   var gHour = hSvg.append("g")
                     .attr("class", "hourLine")
-                    .attr("transform", "translate(" + 775 + "," + 150 + ")");
+                    .attr("transform", "translate(" + 40 + "," + 20 + ")");
 
 
                   gHour.append("g")
@@ -538,4 +517,4 @@
   ;
 
 </script>
-</body>
+{% endblock main %}
