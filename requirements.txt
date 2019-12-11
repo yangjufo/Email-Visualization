@@ -1,1 +1,4 @@
-Django>=2.1.6
+Django==2.2.8
+gunicorn==20.0.4
+pytz==2019.3
+sqlparse==0.3.0
